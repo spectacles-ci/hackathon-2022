@@ -10,14 +10,14 @@ from looker_sdk.sdk.api40.methods import Looker40SDK as LookerSdkClient
 from looker_sdk.sdk.api40.models import User, WriteQuery
 
 from rmli.models import (
-    LookerConfig,
-    InactiveUserResult,
-    SlowExploresResult,
-    UnusedExploreResult,
     ExplorePerformance,
     ExploreQueries,
     ExploreSize,
     ExploreSizeResult,
+    InactiveUserResult,
+    LookerConfig,
+    SlowExploresResult,
+    UnusedExploreResult,
 )
 
 app = FastAPI()
