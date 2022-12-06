@@ -39,6 +39,7 @@ async def root(config: LookerConfig):
         get_longest_running_queries(client),
         get_inactive_user_percentage(client),
         get_explore_and_field_count(client),
+        get_unused_explores(client),
     )
     return results
 
@@ -79,6 +80,7 @@ async def get_inactive_user_percentage(
         "view": "history",
         "fields": ["history.user_id"],
         "filters": {"history.created_date": "last 30 days"},
+        "limit": "50000",
     }
     try:
         results_raw = client.run_inline_query(result_format="json", body=query_body)
@@ -166,3 +168,53 @@ async def get_explore_and_field_count(client: looker_sdk.sdk.api40.methods.Looke
     explore_fields = await asyncio.gather(*tasks)
 
     return explore_fields
+
+
+@backoff.on_exception(backoff.expo, looker_sdk.error.SDKError, max_tries=3)
+async def get_unused_explores(client: looker_sdk.sdk.api40.methods.Looker40SDK):
+    """Get explore usage in the last 90 days"""
+    query_body = {
+        "model": "system__activity",
+        "view": "history",
+        "fields": ["query.model", "query.view", "history.query_run_count"],
+        "filters": {
+            "history.created_date": "last 90 days",
+            "history.workspace_id": "production",
+        },
+        "limit": "50000",
+    }
+    try:
+        results_raw = client.run_inline_query(result_format="json", body=query_body)
+    except looker_sdk.error.SDKError as e:
+        # TODO: Replace with our own error handling
+        raise e
+    else:
+        results = json.loads(results_raw)
+
+    offset = 0
+    keep_going = True
+    explores = []
+
+    while keep_going:
+        models_page = client.all_lookml_models(
+            fields="name,explores", limit=100, offset=offset
+        )
+        for model in models_page:
+            for explore in model.explores:
+                explores.append({"model": model.name, "explore": explore.name})
+
+        if len(models_page) < 100:
+            keep_going = False
+        else:
+            offset += 100
+
+    for explore in explores:
+        explore["query_run_count"] = 0
+        for result in results:
+            if (
+                result["query.model"] == explore["model"]
+                and result["query.view"] == explore["explore"]
+            ):
+                explore["query_run_count"] += result["history.query_run_count"]
+
+    return explores
