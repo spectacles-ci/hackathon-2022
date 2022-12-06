@@ -1,6 +1,0 @@
-looker-sdk==22.20.0
-fastapi==0.88.0
-black==22.10.0
-pydantic==4.4.0
-asyncio==3.4.3
-backoff==2.2.1
