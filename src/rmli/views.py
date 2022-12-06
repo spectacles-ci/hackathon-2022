@@ -1,13 +1,15 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from typing import Sequence
 import looker_sdk
 from looker_sdk.error import SDKError
+from looker_sdk.sdk.api40.models import WriteQuery, User
+from looker_sdk.sdk.api40.methods import Looker40SDK as LookerSdkClient
+from rmli.models import *  # TODO: Make this specific later
 import asyncio
 import json
 import backoff
 
 app = FastAPI()
-LookerSdkClient = looker_sdk.methods40.Looker40SDK
 
 
 class AppApiSettings(looker_sdk.api_settings.ApiSettings):
@@ -26,45 +28,97 @@ class AppApiSettings(looker_sdk.api_settings.ApiSettings):
         return config
 
 
-class LookerConfig(BaseModel):
-    host_url: str
-    port: int
-    client_id: str
-    client_secret: str
+def get_looker_client(config: LookerConfig) -> LookerSdkClient:
+    """Set up the Looker API client using a LookerConfig."""
+    return looker_sdk.init40(config_settings=AppApiSettings(**dict(config)))
 
 
 @app.post("/")
 async def root(config: LookerConfig):
     client = looker_sdk.init40(config_settings=AppApiSettings(**dict(config)))
-    my_user = client.me()
     results = await asyncio.gather(
-        get_longest_running_queries(client),
+        get_longest_running_explores(client),
         get_inactive_user_percentage(client),
-        get_explore_and_field_count(client),
+        get_explore_field_count(client),
         get_unused_explores(client),
         get_unused_fields(client),
     )
     return results
 
 
+@app.get(
+    "/stats/inactive_users",
+    response_model=InactiveUserResult,
+    response_model_by_alias=False,
+)
+async def inactive_users(config: LookerConfig) -> InactiveUserResult:
+    client = get_looker_client(config)
+    inactive_user_pct = await get_inactive_user_percentage(client)
+    return InactiveUserResult(pct_inactive=inactive_user_pct)
+
+
+@app.get(
+    "/stats/slow_explores",
+    response_model=SlowExploresResult,
+    response_model_by_alias=False,
+)
+async def slow_explores(config: LookerConfig) -> SlowExploresResult:
+    client = get_looker_client(config)
+    results = await get_longest_running_explores(client)
+    slow_explores = [ExplorePerformance.parse_obj(result) for result in results]
+    top_3 = sorted(
+        slow_explores, key=lambda explore: explore.avg_runtime, reverse=True
+    )[:3]
+    return SlowExploresResult(slow_explores=top_3)
+
+
+@app.get(
+    "/stats/large_explores",
+    response_model=ExploreSizeResult,
+    response_model_by_alias=False,
+)
+async def large_explores(config: LookerConfig) -> ExploreSizeResult:
+    client = get_looker_client(config)
+    results = await get_explore_field_count(client)
+    slow_explores = [ExploreSize.parse_obj(result) for result in results]
+    top_3 = sorted(
+        slow_explores, key=lambda explore: explore.field_count, reverse=True
+    )[:3]
+    return ExploreSizeResult(large_explores=top_3)
+
+
+@app.get(
+    "/stats/unused_explores",
+    response_model=UnusedExploreResult,
+    response_model_by_alias=False,
+)
+async def unused_explores(config: LookerConfig) -> UnusedExploreResult:
+    client = get_looker_client(config)
+    results = await get_unused_explores(client)
+    print(results)
+    slow_explores = [ExploreQueries.parse_obj(result) for result in results]
+    top_3 = sorted(slow_explores, key=lambda explore: explore.query_count)[:3]
+    return UnusedExploreResult(unused_explores=top_3)
+
+
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
-async def get_longest_running_queries(client: LookerSdkClient):
-    """Get the 10 queries with the longest average runtime in Looker"""
-    query_body = {
-        "model": "system__activity",
-        "view": "history",
-        "fields": [
+async def get_longest_running_explores(client: LookerSdkClient):
+    """Get the 10 Explores with the longest average runtime in Looker"""
+    query = WriteQuery(
+        model="system__activity",
+        view="history",
+        fields=[
             "query.view",
             "query.model",
             "history.average_runtime",
             "history.max_runtime",
         ],
-        "filters": {"history.created_date": "last 90 days"},
-        "limit": "10",
-        "sorts": ["history.average_runtime desc"],
-    }
+        filters={"history.created_date": "last 90 days"},
+        limit="10",
+        sorts=["history.average_runtime desc"],
+    )
     try:
-        results_raw = client.run_inline_query(result_format="json", body=query_body)
+        results_raw = client.run_inline_query(result_format="json", body=query)
     except SDKError as e:
         # TODO: Replace with our own error handling
         raise e
@@ -79,15 +133,15 @@ async def get_inactive_user_percentage(
     client: LookerSdkClient,
 ):
     """Get the percentage of inactive users in Looker"""
-    query_body = {
-        "model": "system__activity",
-        "view": "history",
-        "fields": ["history.user_id"],
-        "filters": {"history.created_date": "last 30 days"},
-        "limit": "50000",
-    }
+    query = WriteQuery(
+        model="system__activity",
+        view="history",
+        fields=["history.user_id"],
+        filters={"history.created_date": "last 30 days"},
+        limit="50000",
+    )
     try:
-        results_raw = client.run_inline_query(result_format="json", body=query_body)
+        results_raw = client.run_inline_query(result_format="json", body=query)
     except SDKError as e:
         # TODO: Replace with our own error handling
         raise e
@@ -99,11 +153,10 @@ async def get_inactive_user_percentage(
 
     offset = 0
     keep_going = True
-    all_users = []
+    all_users: list[User] = []
 
     # Get all the users in Looker
     while keep_going:
-
         users = client.all_users(
             fields="id,is_disabled,verified_looker_employee",
             limit=100,
@@ -126,7 +179,7 @@ async def get_inactive_user_percentage(
     # Do some counting
     all_users_count = len(all_users)
     active_users_count = len(
-        [user for user in all_users if int(user.id) in active_users_list]
+        [user for user in all_users if user.id and int(user.id) in active_users_list]
     )
     inactive_user_percentage = (all_users_count - active_users_count) / all_users_count
 
@@ -134,7 +187,7 @@ async def get_inactive_user_percentage(
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
-async def get_explore_and_field_count(client: LookerSdkClient):
+async def get_explore_field_count(client: LookerSdkClient):
     """Get the number of explores and fields in Looker"""
     offset = 0
     keep_going = True
@@ -156,7 +209,7 @@ async def get_explore_and_field_count(client: LookerSdkClient):
             offset += 100
 
     # Get all the number of fields in each explore
-    tasks = tuple(
+    tasks = (
         get_explore_field_counts(client, explore["model"], explore["explore"])
         for explore in explores
     )
@@ -168,18 +221,18 @@ async def get_explore_and_field_count(client: LookerSdkClient):
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
 async def get_unused_explores(client: LookerSdkClient):
     """Get explore usage in the last 90 days"""
-    query_body = {
-        "model": "system__activity",
-        "view": "history",
-        "fields": ["query.model", "query.view", "history.query_run_count"],
-        "filters": {
+    query = WriteQuery(
+        model="system__activity",
+        view="history",
+        fields=["query.model", "query.view", "history.query_run_count"],
+        filters={
             "history.created_date": "last 90 days",
             "history.workspace_id": "production",
         },
-        "limit": "50000",
-    }
+        limit="50000",
+    )
     try:
-        results_raw = client.run_inline_query(result_format="json", body=query_body)
+        results_raw = client.run_inline_query(result_format="json", body=query)
     except SDKError as e:
         # TODO: Replace with our own error handling
         raise e
@@ -188,7 +241,7 @@ async def get_unused_explores(client: LookerSdkClient):
 
     offset = 0
     keep_going = True
-    explores = []
+    explores: list[dict[str, Any]] = []
 
     # Get all the explores in Looker
     while keep_going:
@@ -196,8 +249,12 @@ async def get_unused_explores(client: LookerSdkClient):
             fields="name,explores", limit=100, offset=offset
         )
         for model in models_page:
-            for explore in model.explores:
-                explores.append({"model": model.name, "explore": explore.name})
+            if model.explores:
+                for model_explore in model.explores:
+                    if model.name and model_explore.name:
+                        explores.append(
+                            {"model": model.name, "explore": model_explore.name}
+                        )
 
         if len(models_page) < 100:
             keep_going = False
@@ -216,7 +273,7 @@ async def get_unused_explores(client: LookerSdkClient):
 
     # Filter out explores with less than 50 runs in the last 90 days
     unused_explores = [
-        explore for explore in explores if explore["query_run_count"] < 50
+        explore for explore in explores if int(explore["query_run_count"]) < 50
     ]
 
     return unused_explores
@@ -225,20 +282,20 @@ async def get_unused_explores(client: LookerSdkClient):
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
 async def get_unused_fields(client: LookerSdkClient):
     """Get field usage in the last 90 days"""
-    query_body = {
-        "model": "system__activity",
-        "view": "field_usage",
-        "fields": [
+    query = WriteQuery(
+        model="system__activity",
+        view="field_usage",
+        fields=[
             "field_usage.model",
             "field_usage.explore",
             "field_usage.view",
             "field_usage.field",
             "field_usage.times_used",
         ],
-        "limit": "50000",
-    }
+        limit="50000",
+    )
     try:
-        results_raw = client.run_inline_query(result_format="json", body=query_body)
+        results_raw = client.run_inline_query(result_format="json", body=query)
     except SDKError as e:
         # TODO: Replace with our own error handling
         raise e
@@ -255,8 +312,9 @@ async def get_unused_fields(client: LookerSdkClient):
             fields="name,explores", limit=100, offset=offset
         )
         for model in models_page:
-            for explore in model.explores:
-                explores.append({"model": model.name, "explore": explore.name})
+            if model.explores:
+                for explore in model.explores:
+                    explores.append({"model": model.name, "explore": explore.name})
 
         if len(models_page) < 100:
             keep_going = False
@@ -297,7 +355,7 @@ async def get_unused_fields(client: LookerSdkClient):
     return unused_fields
 
 
-async def get_explore_fields(client, model, explore):
+async def get_explore_fields(client, model, explore) -> dict[str, Any]:
     print(f"Getting fields for {model}.{explore}")
     explore_fields = client.lookml_model_explore(
         lookml_model_name=model, explore_name=explore, fields="fields"
@@ -314,7 +372,7 @@ async def get_explore_fields(client, model, explore):
     }
 
 
-async def get_explore_field_counts(client, model, explore):
+async def get_explore_field_counts(client, model, explore) -> dict[str, Any]:
     fields = await get_explore_fields(client, model, explore)
 
     result = {
