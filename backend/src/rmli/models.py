@@ -1,5 +1,5 @@
 import abc
-from typing import Any, Literal
+from typing import Any, Literal, Type
 
 from pydantic import BaseModel, Field
 
@@ -56,6 +56,15 @@ class TestResult(BaseModel, abc.ABC):
         """Include the computed grade in the dict representation."""
         base = super().dict(*args, **kwargs)
         return {**base, "grade": self.grade}
+
+    class Config:
+        @staticmethod
+        def schema_extra(schema: dict[str, Any], model: Type["TestResult"]) -> None:
+            schema["properties"]["grade"] = {
+                "title": "Grade",
+                "type": "string",
+                "enum": ["bad", "ok", "good"],
+            }
 
 
 class InactiveUserResult(TestResult):
