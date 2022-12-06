@@ -5,6 +5,8 @@ from looker_sdk.error import SDKError
 import asyncio
 import json
 import backoff
+import duckdb
+import pandas as pd
 
 app = FastAPI()
 LookerSdkClient = looker_sdk.methods40.Looker40SDK
@@ -38,11 +40,11 @@ async def root(config: LookerConfig):
     client = looker_sdk.init40(config_settings=AppApiSettings(**dict(config)))
     my_user = client.me()
     results = await asyncio.gather(
-        get_longest_running_queries(client),
-        get_inactive_user_percentage(client),
-        get_explore_and_field_count(client),
+        # get_longest_running_queries(client),
+        # get_inactive_user_percentage(client),
+        # get_explore_and_field_count(client),
         get_unused_explores(client),
-        get_unused_fields(client),
+        # get_unused_fields(client),
     )
     return results
 
@@ -214,12 +216,37 @@ async def get_unused_explores(client: LookerSdkClient):
             ):
                 explore["query_run_count"] += result["history.query_run_count"]
 
-    # Filter out explores with less than 50 runs in the last 90 days
-    unused_explores = [
-        explore for explore in explores if explore["query_run_count"] < 50
-    ]
+    df = pd.DataFrame(explores)
+    count_of_explores_with_less_50_queries = int(
+        duckdb.query("select count(*) from df where query_run_count < 50")
+        .to_df()
+        .iloc[0][0]
+    )
+    explores_with_least_queries = list(
+        duckdb.query(
+            "select model||'.'||explore as explore_name from df order by query_run_count asc limit 10"
+        )
+        .to_df()["explore_name"]
+        .tolist()
+    )
 
-    return unused_explores
+    if count_of_explores_with_less_50_queries > 20:
+        status = "red"
+    elif count_of_explores_with_less_50_queries > 10:
+        status = "yellow"
+    else:
+        status = "green"
+
+    test = {
+        "name": "Unused Explores",
+        "status": status,
+        "data": {
+            "explores_with_least_queries": explores_with_least_queries,
+            "count_of_explores_with_less_50_queries": count_of_explores_with_less_50_queries,
+        },
+    }
+
+    return test
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
