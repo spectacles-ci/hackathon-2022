@@ -33,19 +33,6 @@ def get_looker_client(config: LookerConfig) -> LookerSdkClient:
     return looker_sdk.init40(config_settings=AppApiSettings(**dict(config)))
 
 
-@app.post("/")
-async def root(config: LookerConfig):
-    client = looker_sdk.init40(config_settings=AppApiSettings(**dict(config)))
-    results = await asyncio.gather(
-        get_longest_running_explores(client),
-        get_inactive_user_percentage(client),
-        get_explore_field_count(client),
-        get_unused_explores(client),
-        get_unused_fields(client),
-    )
-    return results
-
-
 @app.get(
     "/stats/inactive_users",
     response_model=InactiveUserResult,
@@ -99,6 +86,11 @@ async def unused_explores(config: LookerConfig) -> UnusedExploreResult:
     slow_explores = [ExploreQueries.parse_obj(result) for result in results]
     top_3 = sorted(slow_explores, key=lambda explore: explore.query_count)[:3]
     return UnusedExploreResult(unused_explores=top_3)
+
+
+@app.get("/")
+async def health_check() -> str:
+    return "ok"
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
