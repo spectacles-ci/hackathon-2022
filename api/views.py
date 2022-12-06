@@ -36,7 +36,9 @@ async def root(config: LookerConfig):
     client = looker_sdk.init40(config_settings=AppApiSettings(**dict(config)))
     my_user = client.me()
     results = await asyncio.gather(
-        get_longest_running_queries(client), get_inactive_user_percentage(client)
+        get_longest_running_queries(client),
+        get_inactive_user_percentage(client),
+        get_explore_and_field_count(client),
     )
     return results
 
@@ -121,3 +123,46 @@ async def get_inactive_user_percentage(
     inactive_user_percentage = (all_users_count - active_users_count) / all_users_count
 
     return inactive_user_percentage
+
+
+@backoff.on_exception(backoff.expo, looker_sdk.error.SDKError, max_tries=3)
+async def get_explore_and_field_count(client: looker_sdk.sdk.api40.methods.Looker40SDK):
+    """Get the number of explores and fields in Looker"""
+    offset = 0
+    keep_going = True
+    explores = []
+
+    while keep_going:
+        models_page = client.all_lookml_models(
+            fields="name,explores", limit=100, offset=offset
+        )
+        for model in models_page:
+            for explore in model.explores:
+                explores.append({"model": model.name, "explore": explore.name})
+
+        if len(models_page) < 100:
+            keep_going = False
+        else:
+            offset += 100
+
+    async def get_explore_fields(client, model, explore):
+        print(f"Getting fields for {model}.{explore}")
+        explore_fields = client.lookml_model_explore(
+            lookml_model_name=model, explore_name=explore, fields="fields"
+        )
+        return {
+            "model": model,
+            "explore": explore,
+            "field_count": len(explore_fields.fields.dimensions)
+            + len(explore_fields.fields.measures)
+            + len(explore_fields.fields.parameters),
+        }
+
+    tasks = tuple(
+        get_explore_fields(client, explore["model"], explore["explore"])
+        for explore in explores
+    )
+
+    explore_fields = await asyncio.gather(*tasks)
+
+    return explore_fields
