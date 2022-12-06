@@ -1,0 +1,4 @@
+looker-sdk==22.20.0
+fastapi==0.88.0
+black==22.10.0
+pydantic==4.4.0
