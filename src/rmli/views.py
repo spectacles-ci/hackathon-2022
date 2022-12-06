@@ -1,19 +1,30 @@
-from fastapi import FastAPI
-from typing import Sequence
-import looker_sdk
-from looker_sdk.error import SDKError
-from looker_sdk.sdk.api40.models import WriteQuery, User
-from looker_sdk.sdk.api40.methods import Looker40SDK as LookerSdkClient
-from rmli.models import *  # TODO: Make this specific later
 import asyncio
 import json
+from typing import Any
+
 import backoff
+import looker_sdk
+from fastapi import FastAPI
+from looker_sdk.error import SDKError
+from looker_sdk.sdk.api40.methods import Looker40SDK as LookerSdkClient
+from looker_sdk.sdk.api40.models import User, WriteQuery
+
+from rmli.models import (
+    LookerConfig,
+    InactiveUserResult,
+    SlowExploresResult,
+    UnusedExploreResult,
+    ExplorePerformance,
+    ExploreQueries,
+    ExploreSize,
+    ExploreSizeResult,
+)
 
 app = FastAPI()
 
 
 class AppApiSettings(looker_sdk.api_settings.ApiSettings):
-    def __init__(self, *args, **kw_args):
+    def __init__(self, *args, **kw_args) -> None:  # type: ignore
         self.host_url = kw_args.pop("host_url")
         self.port = kw_args.pop("port")
         self.client_id = kw_args.pop("client_id")
@@ -94,7 +105,7 @@ async def health_check() -> str:
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
-async def get_longest_running_explores(client: LookerSdkClient):
+async def get_longest_running_explores(client: LookerSdkClient) -> Any:
     """Get the 10 Explores with the longest average runtime in Looker"""
     query = WriteQuery(
         model="system__activity",
@@ -121,9 +132,7 @@ async def get_longest_running_explores(client: LookerSdkClient):
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
-async def get_inactive_user_percentage(
-    client: LookerSdkClient,
-):
+async def get_inactive_user_percentage(client: LookerSdkClient) -> float:
     """Get the percentage of inactive users in Looker"""
     query = WriteQuery(
         model="system__activity",
@@ -179,7 +188,7 @@ async def get_inactive_user_percentage(
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
-async def get_explore_field_count(client: LookerSdkClient):
+async def get_explore_field_count(client: LookerSdkClient) -> list[dict[str, Any]]:
     """Get the number of explores and fields in Looker"""
     offset = 0
     keep_going = True
@@ -193,7 +202,8 @@ async def get_explore_field_count(client: LookerSdkClient):
         for model in models_page:
             if model.explores:
                 for explore in model.explores:
-                    explores.append({"model": model.name, "explore": explore.name})
+                    if model.name and explore.name:
+                        explores.append({"model": model.name, "explore": explore.name})
 
         if len(models_page) < 100:
             keep_going = False
@@ -205,13 +215,12 @@ async def get_explore_field_count(client: LookerSdkClient):
         get_explore_field_counts(client, explore["model"], explore["explore"])
         for explore in explores
     )
-    explore_fields = await asyncio.gather(*tasks)
-
+    explore_fields: list[dict[str, Any]] = await asyncio.gather(*tasks)
     return explore_fields
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
-async def get_unused_explores(client: LookerSdkClient):
+async def get_unused_explores(client: LookerSdkClient) -> list[dict[str, Any]]:
     """Get explore usage in the last 90 days"""
     query = WriteQuery(
         model="system__activity",
@@ -272,7 +281,7 @@ async def get_unused_explores(client: LookerSdkClient):
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
-async def get_unused_fields(client: LookerSdkClient):
+async def get_unused_fields(client: LookerSdkClient) -> list[dict[str, Any]]:
     """Get field usage in the last 90 days"""
     query = WriteQuery(
         model="system__activity",
@@ -296,7 +305,7 @@ async def get_unused_fields(client: LookerSdkClient):
 
     offset = 0
     keep_going = True
-    explores = []
+    explores: list[dict[str, Any]] = []
 
     # Get all the explores in Looker
     while keep_going:
@@ -347,15 +356,22 @@ async def get_unused_fields(client: LookerSdkClient):
     return unused_fields
 
 
-async def get_explore_fields(client, model, explore) -> dict[str, Any]:
+async def get_explore_fields(
+    client: LookerSdkClient, model: str, explore: str
+) -> dict[str, Any]:
     print(f"Getting fields for {model}.{explore}")
     explore_fields = client.lookml_model_explore(
         lookml_model_name=model, explore_name=explore, fields="fields"
     )
 
-    dimensions = [dimension.name for dimension in explore_fields.fields.dimensions]
-    measures = [measure.name for measure in explore_fields.fields.measures]
-    fields = dimensions + measures
+    fields = []
+    if explore_fields.fields:
+        if explore_fields.fields.dimensions:
+            fields.extend(
+                [dimension.name for dimension in explore_fields.fields.dimensions]
+            )
+        if explore_fields.fields.measures:
+            fields.extend([measure.name for measure in explore_fields.fields.measures])
 
     return {
         "model": model,
@@ -364,7 +380,9 @@ async def get_explore_fields(client, model, explore) -> dict[str, Any]:
     }
 
 
-async def get_explore_field_counts(client, model, explore) -> dict[str, Any]:
+async def get_explore_field_counts(
+    client: LookerSdkClient, model: str, explore: str
+) -> dict[str, Any]:
     fields = await get_explore_fields(client, model, explore)
 
     result = {

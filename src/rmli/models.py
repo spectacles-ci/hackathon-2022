@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field, root_validator
-from typing import Literal, Any
 import abc
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
 
 Grade = Literal["bad", "ok", "good"]
 
