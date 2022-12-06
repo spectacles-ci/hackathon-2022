@@ -44,7 +44,7 @@ def get_looker_client(config: LookerConfig) -> LookerSdkClient:
     return looker_sdk.init40(config_settings=AppApiSettings(**dict(config)))
 
 
-@app.get(
+@app.post(
     "/stats/inactive_users",
     response_model=InactiveUserResult,
     response_model_by_alias=False,
@@ -55,7 +55,7 @@ async def inactive_users(config: LookerConfig) -> InactiveUserResult:
     return InactiveUserResult(pct_inactive=inactive_user_pct)
 
 
-@app.get(
+@app.post(
     "/stats/slow_explores",
     response_model=SlowExploresResult,
     response_model_by_alias=False,
@@ -70,7 +70,7 @@ async def slow_explores(config: LookerConfig) -> SlowExploresResult:
     return SlowExploresResult(slow_explores=top_3)
 
 
-@app.get(
+@app.post(
     "/stats/large_explores",
     response_model=ExploreSizeResult,
     response_model_by_alias=False,
@@ -85,7 +85,7 @@ async def large_explores(config: LookerConfig) -> ExploreSizeResult:
     return ExploreSizeResult(large_explores=top_3)
 
 
-@app.get(
+@app.post(
     "/stats/unused_explores",
     response_model=UnusedExploreResult,
     response_model_by_alias=False,
@@ -99,7 +99,7 @@ async def unused_explores(config: LookerConfig) -> UnusedExploreResult:
     return UnusedExploreResult(unused_explores=top_3)
 
 
-@app.get("/")
+@app.post("/")
 async def health_check() -> str:
     return "ok"
 
