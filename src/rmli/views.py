@@ -38,10 +38,10 @@ async def root(config: LookerConfig):
     client = looker_sdk.init40(config_settings=AppApiSettings(**dict(config)))
     my_user = client.me()
     results = await asyncio.gather(
-        # get_longest_running_queries(client),
-        # get_inactive_user_percentage(client),
-        # get_explore_and_field_count(client),
-        # get_unused_explores(client),
+        get_longest_running_queries(client),
+        get_inactive_user_percentage(client),
+        get_explore_and_field_count(client),
+        get_unused_explores(client),
         get_unused_fields(client),
     )
     return results

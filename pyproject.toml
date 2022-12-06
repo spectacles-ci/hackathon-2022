@@ -2,7 +2,7 @@
 name = "roast-my-looker-instance"
 version = "0.1.0"
 description = "Seriously? You read the description for Python packages?"
-authors = ["Josh Temple <josh@spectacles.dev>"]
+authors = ["Josh Temple <josh@spectacles.dev>", "Dylan Atlas-Baker <dylan@spectacles.dev>"]
 license = "MIT"
 readme = "README.md"
 packages = [{include = "rmli", from = "src"}]
@@ -13,6 +13,7 @@ looker-sdk = "^22.20.0"
 fastapi = "^0.88.0"
 pydantic = "^1.10.2"
 backoff = "^2.2.1"
+uvicorn = "^0.20.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
