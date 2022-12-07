@@ -51,8 +51,12 @@ def get_looker_client(config: LookerConfig) -> LookerSdkClient:
 )
 async def inactive_users(config: LookerConfig) -> InactiveUserResult:
     client = get_looker_client(config)
-    inactive_user_pct = await get_inactive_user_percentage(client)
-    return InactiveUserResult(pct_inactive=inactive_user_pct)
+    inactive_user_pct, sample_inactive_users = await get_inactive_user_percentage(
+        client
+    )
+    return InactiveUserResult(
+        pct_inactive=inactive_user_pct, sample_user_names=sample_inactive_users
+    )
 
 
 @app.post(
@@ -132,7 +136,9 @@ async def get_longest_running_explores(client: LookerSdkClient) -> Any:
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
-async def get_inactive_user_percentage(client: LookerSdkClient) -> float:
+async def get_inactive_user_percentage(
+    client: LookerSdkClient,
+) -> tuple[float, list[str]]:
     """Get the percentage of inactive users in Looker"""
     query = WriteQuery(
         model="system__activity",
@@ -150,7 +156,7 @@ async def get_inactive_user_percentage(client: LookerSdkClient) -> float:
         active_users = json.loads(results_raw)
 
     # Get the IDs of all the users with queries in the last 30 days
-    active_users_list = [user["history.user_id"] for user in active_users]
+    active_users_list = [str(user["history.user_id"]) for user in active_users]
 
     offset = 0
     keep_going = True
@@ -179,12 +185,23 @@ async def get_inactive_user_percentage(client: LookerSdkClient) -> float:
 
     # Do some counting
     all_users_count = len(all_users)
-    active_users_count = len(
-        [user for user in all_users if user.id and int(user.id) in active_users_list]
-    )
-    inactive_user_percentage = (all_users_count - active_users_count) / all_users_count
+    inactive_users = [user for user in all_users if user.id not in active_users_list]
+    inactive_users_count = len(inactive_users)
+    inactive_user_percentage = inactive_users_count / all_users_count
 
-    return inactive_user_percentage
+    sample_count = 0
+    sample_user_names = []
+    i = 0
+
+    while sample_count < 3 and i + 1 <= inactive_users_count:
+        inactive_user_id = inactive_users[i].id
+        display_name = client.user(inactive_user_id).display_name
+        if display_name:
+            sample_user_names.append(display_name)
+            sample_count += 1
+        i += 1
+
+    return inactive_user_percentage, sample_user_names
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
