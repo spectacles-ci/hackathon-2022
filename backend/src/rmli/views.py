@@ -107,9 +107,15 @@ async def large_explores(config: LookerConfig) -> ExploreSizeResult:
 async def unused_explores(config: LookerConfig) -> UnusedExploreResult:
     client = get_looker_client(config)
     results = await get_unused_explores(client)
-    slow_explores = [ExploreQueries.parse_obj(result) for result in results]
-    top_3 = sorted(slow_explores, key=lambda explore: explore.query_count)[:3]
-    return UnusedExploreResult(unused_explores=top_3)
+    explores = [ExploreQueries.parse_obj(result) for result in results]
+    count_explores = len(explores)
+    unused_explores = [explore for explore in explores if explore.query_count == 0]
+    count_unused_explores = len(unused_explores)
+    unused_percentage = count_unused_explores / count_explores
+    top_3 = sorted(unused_explores, key=lambda explore: explore.query_count)[:3]
+    return UnusedExploreResult(
+        unused_explores=top_3, unused_percentage=unused_percentage
+    )
 
 
 @app.post(
@@ -359,7 +365,7 @@ async def get_unused_explores(client: LookerSdkClient) -> list[dict[str, Any]]:
         for model in models_page:
             if model.explores:
                 for model_explore in model.explores:
-                    if model.name and model_explore.name:
+                    if model.name and model_explore.name and not model_explore.hidden:
                         explores.append(
                             {"model": model.name, "explore": model_explore.name}
                         )
@@ -379,12 +385,7 @@ async def get_unused_explores(client: LookerSdkClient) -> list[dict[str, Any]]:
             ):
                 explore["query_run_count"] += result["history.query_run_count"]
 
-    # Filter out explores with less than 50 runs in the last 90 days
-    unused_explores = [
-        explore for explore in explores if int(explore["query_run_count"]) < 50
-    ]
-
-    return unused_explores
+    return explores
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)

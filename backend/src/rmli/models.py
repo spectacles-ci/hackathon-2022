@@ -133,10 +133,17 @@ class UnusedExploreResult(TestResult):
     name: Literal["Unused Explores"] = "Unused Explores"
     test_id: Literal["unused_explores"] = "unused_explores"
     unused_explores: list[ExploreQueries]  # sorted by query_count, descending
+    unused_percentage: float
 
     @property
     def grade(self) -> Grade:
-        return "bad"
+        count_unused = len(self.unused_explores)
+        if count_unused > 5 or self.unused_percentage > 0.05:
+            return "bad"
+        elif count_unused > 2 or self.unused_percentage > 0.02:
+            return "ok"
+        else:
+            return "good"
 
 
 class UnusedFieldsResult(TestResult):
