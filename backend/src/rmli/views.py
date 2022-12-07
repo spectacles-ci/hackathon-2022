@@ -49,11 +49,7 @@ def get_looker_client(config: LookerConfig) -> LookerSdkClient:
     return looker_sdk.init40(config_settings=AppApiSettings(**dict(config)))
 
 
-@app.post(
-    "/stats/inactive_users",
-    response_model=InactiveUserResult,
-    response_model_by_alias=False,
-)
+@app.post("/stats/inactive_users", response_model=InactiveUserResult)
 async def inactive_users(config: LookerConfig) -> InactiveUserResult:
     client = get_looker_client(config)
     inactive_user_pct, sample_inactive_users = await get_inactive_user_percentage(
@@ -64,11 +60,7 @@ async def inactive_users(config: LookerConfig) -> InactiveUserResult:
     )
 
 
-@app.post(
-    "/stats/slow_explores",
-    response_model=SlowExploresResult,
-    response_model_by_alias=False,
-)
+@app.post("/stats/slow_explores", response_model=SlowExploresResult)
 async def slow_explores(config: LookerConfig) -> SlowExploresResult:
     client = get_looker_client(config)
     results = await get_longest_running_explores(client)
@@ -79,11 +71,7 @@ async def slow_explores(config: LookerConfig) -> SlowExploresResult:
     return SlowExploresResult(slow_explores=top_3)
 
 
-@app.post(
-    "/stats/large_explores",
-    response_model=ExploreSizeResult,
-    response_model_by_alias=False,
-)
+@app.post("/stats/large_explores", response_model=ExploreSizeResult)
 async def large_explores(config: LookerConfig) -> ExploreSizeResult:
     client = get_looker_client(config)
     results = await get_explore_field_count(client)
@@ -99,11 +87,7 @@ async def large_explores(config: LookerConfig) -> ExploreSizeResult:
     )
 
 
-@app.post(
-    "/stats/unused_explores",
-    response_model=UnusedExploreResult,
-    response_model_by_alias=False,
-)
+@app.post("/stats/unused_explores", response_model=UnusedExploreResult)
 async def unused_explores(config: LookerConfig) -> UnusedExploreResult:
     client = get_looker_client(config)
     results = await get_unused_explores(client)
