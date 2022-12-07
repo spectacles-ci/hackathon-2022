@@ -97,7 +97,7 @@ class ExploreSizeResult(TestResult):
     name: Literal["Large Explores"] = "Large Explores"
     test_id: Literal["large_explores"] = "large_explores"
     large_explores: list[ExploreSize]  # sorted by field_count, descending
-    # median_explore_size: int
+    median_explore_size: int
 
     @property
     def grade(self) -> Grade:
