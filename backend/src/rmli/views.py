@@ -202,7 +202,7 @@ async def get_inactive_user_percentage(
     i = 0
 
     while sample_count < 3 and i + 1 <= inactive_users_count:
-        inactive_user_id = inactive_users[i].id
+        inactive_user_id = str(inactive_users[i].id)
         display_name = client.user(inactive_user_id).display_name
         if display_name:
             sample_user_names.append(display_name)
