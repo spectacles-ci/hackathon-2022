@@ -27,7 +27,7 @@ pythonpath = ["src"]
 
 [tool.pyright]
 reportPrivateImportUsage = false
-
+ 
 [tool.mypy]
 plugins = 'pydantic.mypy'
 strict = true
@@ -42,5 +42,5 @@ warn_unused_ignores = true
 profile = "black"
 
 [build-system]
-requires = ["poetry-core>=1.2.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
