@@ -21,6 +21,8 @@ from rmli.models import (
     UnusedExploreResult,
     AbandonedDashboardResult,
     DashboardUsage,
+    OverusedQueryResult,
+    QueryUsage,
 )
 
 app = FastAPI()
@@ -134,6 +136,18 @@ async def abandoned_dashboards(config: LookerConfig) -> AbandonedDashboardResult
         count_abandoned=abandoned_dashboard_count,
         sample_abandoned_dashboards=sample_abandoned_dashboards,
     )
+
+
+@app.post(
+    "/stats/overused_queries",
+    response_model=OverusedQueryResult,
+    response_model_by_alias=False,
+)
+async def overused_queries(config: LookerConfig) -> OverusedQueryResult:
+    client = get_looker_client(config)
+    results = await get_query_usage(client)
+    queries = [QueryUsage.parse_obj(result) for result in results]
+    return OverusedQueryResult(sample_overused_queries=queries)
 
 
 @app.get("/")
@@ -371,6 +385,35 @@ async def get_unused_explores(client: LookerSdkClient) -> list[dict[str, Any]]:
     ]
 
     return unused_explores
+
+
+@backoff.on_exception(backoff.expo, SDKError, max_tries=3)
+async def get_query_usage(client: LookerSdkClient) -> list[dict[str, Any]]:
+    """Get queries most frequently run queries in last 7 days"""
+    query = WriteQuery(
+        model="system__activity",
+        view="history",
+        fields=[
+            "query.view",
+            "query.model",
+            "query.id",
+            "history.issuer_source",
+            "history.source",
+            "history.database_result_query_count",
+            "history.cache_result_query_count",
+        ],
+        limit="10",
+        sorts=["history.database_result_query_count desc"],
+    )
+    try:
+        results_raw = client.run_inline_query(result_format="json", body=query)
+    except SDKError as e:
+        # TODO: Replace with our own error handling
+        raise e
+    else:
+        results = json.loads(results_raw)
+
+    return results
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
