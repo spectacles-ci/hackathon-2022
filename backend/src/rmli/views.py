@@ -99,7 +99,7 @@ async def unused_explores(config: LookerConfig) -> UnusedExploreResult:
     return UnusedExploreResult(unused_explores=top_3)
 
 
-@app.post("/")
+@app.get("/")
 async def health_check() -> str:
     return "ok"
 
