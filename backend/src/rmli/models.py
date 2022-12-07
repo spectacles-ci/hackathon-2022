@@ -43,6 +43,12 @@ class ExploreUnusedFields(BaseModel):
     pct_unused: float
 
 
+class DashboardUsage(BaseModel):
+    dashboard_id: str
+    dashboard_title: str
+    query_count: int
+
+
 class TestResult(BaseModel, abc.ABC):
     name: str
 
@@ -138,6 +144,18 @@ class UnusedFieldsExploreResult(TestResult):
     name: Literal["Explores with Unused Fields"] = "Explores with Unused Fields"
     test_id: Literal["explores_with_unused_fields"] = "explores_with_unused_fields"
     explores: list[ExploreUnusedFields]
+
+    @property
+    def grade(self) -> Grade:
+        return "bad"
+
+
+class AbandonedDashboardResult(TestResult):
+    name: Literal["Abandoned Dashboards"] = "Abandoned Dashboards"
+    test_id: Literal["abandoned_dashboards"] = "abandoned_dashboards"
+    pct_abandoned: float
+    count_abandoned: int
+    sample_abandoned_dashboards: list[DashboardUsage]
 
     @property
     def grade(self) -> Grade:
