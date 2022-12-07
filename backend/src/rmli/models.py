@@ -90,6 +90,12 @@ class SlowExploresResult(TestResult):
 
     @property
     def grade(self) -> Grade:
+        if self.slow_explores[0].avg_runtime > 40:
+            return "bad"
+        elif self.slow_explores[0].avg_runtime > 20:
+            return "ok"
+        else:
+            return "good"
         return "bad"
 
 

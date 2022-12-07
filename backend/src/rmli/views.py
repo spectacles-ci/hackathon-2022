@@ -103,7 +103,6 @@ async def large_explores(config: LookerConfig) -> ExploreSizeResult:
 async def unused_explores(config: LookerConfig) -> UnusedExploreResult:
     client = get_looker_client(config)
     results = await get_unused_explores(client)
-    print(results)
     slow_explores = [ExploreQueries.parse_obj(result) for result in results]
     top_3 = sorted(slow_explores, key=lambda explore: explore.query_count)[:3]
     return UnusedExploreResult(unused_explores=top_3)
@@ -126,7 +125,10 @@ async def get_longest_running_explores(client: LookerSdkClient) -> Any:
             "history.average_runtime",
             "history.max_runtime",
         ],
-        filters={"history.created_date": "last 90 days"},
+        filters={
+            "history.created_date": "last 90 days",
+            "history.query_run_count": ">= 100",
+        },
         limit="10",
         sorts=["history.average_runtime desc"],
     )
