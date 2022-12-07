@@ -1,6 +1,7 @@
 import asyncio
 import json
 from typing import Any
+import statistics
 
 import backoff
 import looker_sdk
@@ -82,11 +83,16 @@ async def slow_explores(config: LookerConfig) -> SlowExploresResult:
 async def large_explores(config: LookerConfig) -> ExploreSizeResult:
     client = get_looker_client(config)
     results = await get_explore_field_count(client)
-    slow_explores = [ExploreSize.parse_obj(result) for result in results]
+    large_explores = [ExploreSize.parse_obj(result) for result in results]
     top_3 = sorted(
-        slow_explores, key=lambda explore: explore.field_count, reverse=True
+        large_explores, key=lambda explore: explore.field_count, reverse=True
     )[:3]
-    return ExploreSizeResult(large_explores=top_3)
+    median_explore_size = int(
+        statistics.median([explore.field_count for explore in large_explores])
+    )
+    return ExploreSizeResult(
+        large_explores=top_3, median_explore_size=median_explore_size
+    )
 
 
 @app.post(
