@@ -19,22 +19,22 @@ class Explore(BaseModel):
 
 
 class ExploreSize(BaseModel):
-    model_name: str = Field(alias="model")
-    explore_name: str = Field(alias="explore")
+    model_name: str = Field(..., alias="model")
+    explore_name: str = Field(..., alias="explore")
     field_count: int
 
 
 class ExplorePerformance(BaseModel):
-    model_name: str = Field(alias="query.model")
-    explore_name: str = Field(alias="query.view")
-    avg_runtime: float = Field(alias="history.average_runtime")  # seconds
-    max_runtime: float = Field(alias="history.max_runtime")  # seconds
+    model_name: str = Field(..., alias="query.model")
+    explore_name: str = Field(..., alias="query.view")
+    avg_runtime: float = Field(..., alias="history.average_runtime")  # seconds
+    max_runtime: float = Field(..., alias="history.max_runtime")  # seconds
 
 
 class ExploreQueries(BaseModel):
-    model_name: str = Field(alias="model")
-    explore_name: str = Field(alias="explore")
-    query_count: int = Field(alias="query_run_count")
+    model_name: str = Field(..., alias="model")
+    explore_name: str = Field(..., alias="explore")
+    query_count: int = Field(..., alias="query_run_count")
 
 
 class ExploreUnusedFields(BaseModel):
