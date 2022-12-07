@@ -16,13 +16,54 @@ export interface paths {
   "/stats/unused_explores": {
     post: operations["unused_explores_stats_unused_explores_post"];
   };
+  "/stats/abandoned_dashboards": {
+    post: operations["abandoned_dashboards_stats_abandoned_dashboards_post"];
+  };
+  "/stats/overused_queries": {
+    post: operations["overused_queries_stats_overused_queries_post"];
+  };
   "/": {
-    post: operations["health_check__post"];
+    get: operations["health_check__get"];
   };
 }
 
 export interface components {
   schemas: {
+    /** AbandonedDashboardResult */
+    AbandonedDashboardResult: {
+      /**
+       * Name
+       * @default Abandoned Dashboards
+       * @enum {string}
+       */
+      name?: "Abandoned Dashboards";
+      /**
+       * Test Id
+       * @default abandoned_dashboards
+       * @enum {string}
+       */
+      test_id?: "abandoned_dashboards";
+      /** Pct Abandoned */
+      pct_abandoned: number;
+      /** Count Abandoned */
+      count_abandoned: number;
+      /** Sample Abandoned Dashboards */
+      sample_abandoned_dashboards: components["schemas"]["DashboardUsage"][];
+      /**
+       * Grade
+       * @enum {string}
+       */
+      grade?: "bad" | "ok" | "good";
+    };
+    /** DashboardUsage */
+    DashboardUsage: {
+      /** Dashboard Id */
+      dashboard_id: string;
+      /** Dashboard Title */
+      dashboard_title: string;
+      /** Query Count */
+      query_count: number;
+    };
     /** ExplorePerformance */
     ExplorePerformance: {
       /** Query.Model */
@@ -68,6 +109,8 @@ export interface components {
       test_id?: "large_explores";
       /** Large Explores */
       large_explores: components["schemas"]["ExploreSize"][];
+      /** Median Explore Size */
+      median_explore_size: number;
       /**
        * Grade
        * @enum {string}
@@ -95,6 +138,8 @@ export interface components {
       test_id?: "inactive_users";
       /** Pct Inactive */
       pct_inactive: number;
+      /** Sample User Names */
+      sample_user_names: string[];
       /**
        * Grade
        * @enum {string}
@@ -111,6 +156,43 @@ export interface components {
       client_id: string;
       /** Client Secret */
       client_secret: string;
+    };
+    /** OverusedQueryResult */
+    OverusedQueryResult: {
+      /**
+       * Name
+       * @default Overused Queries
+       * @enum {string}
+       */
+      name?: "Overused Queries";
+      /**
+       * Test Id
+       * @default overused_queries
+       * @enum {string}
+       */
+      test_id?: "overused_queries";
+      /** Sample Overused Queries */
+      sample_overused_queries: components["schemas"]["QueryUsage"][];
+      /**
+       * Grade
+       * @enum {string}
+       */
+      grade?: "bad" | "ok" | "good";
+    };
+    /** QueryUsage */
+    QueryUsage: {
+      /** Query.View */
+      "query.view": string;
+      /** Query.Model */
+      "query.model": string;
+      /** Query.Id */
+      "query.id": string;
+      /** History.Issuer Source */
+      "history.issuer_source": string;
+      /** History.Source */
+      "history.source": string;
+      /** History.Database Result Query Count */
+      "history.database_result_query_count": number;
     };
     /** SlowExploresResult */
     SlowExploresResult: {
@@ -150,6 +232,8 @@ export interface components {
       test_id?: "unused_explores";
       /** Unused Explores */
       unused_explores: components["schemas"]["ExploreQueries"][];
+      /** Unused Percentage */
+      unused_percentage: number;
       /**
        * Grade
        * @enum {string}
@@ -253,7 +337,49 @@ export interface operations {
       };
     };
   };
-  health_check__post: {
+  abandoned_dashboards_stats_abandoned_dashboards_post: {
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AbandonedDashboardResult"];
+        };
+      };
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LookerConfig"];
+      };
+    };
+  };
+  overused_queries_stats_overused_queries_post: {
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["OverusedQueryResult"];
+        };
+      };
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LookerConfig"];
+      };
+    };
+  };
+  health_check__get: {
     responses: {
       /** Successful Response */
       200: {
