@@ -71,7 +71,7 @@ class InactiveUserResult(TestResult):
     name: Literal["Inactive Users"] = "Inactive Users"
     test_id: Literal["inactive_users"] = "inactive_users"
     pct_inactive: float
-    # sample_user_names: list[str]
+    sample_user_names: list[str]
 
     @property
     def grade(self) -> Grade:
