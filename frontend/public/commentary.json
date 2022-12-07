@@ -1,0 +1,26 @@
+[
+    {
+        "endpoint": "/stats/inactive_users",
+        "opening_commentary": [
+            "Let's have a look at whether people are _actually_ using your Looker instance. It would be a pity to have put in all that effort to build all your explore and for no one to be using it, right?"
+        ],
+        "responses": {
+            "bad": [
+                "Oooof. ${pct_inactive}% of your users haven't run a query in the last 90 days.",
+                "That's a lot of unused potential. You should probably do something about that.",
+                "Even some of your earliest adopters like ${sample_user_names[0]}, ${sample_user_names[1]} and ${sample_user_names[2]} haven't run a query in that time."
+            ],
+            "ok": [
+                "Not _terrible_... but not great. ${pct_inactive}% of your users haven't run a query in the last 90 days. I hope it's not your job to get them using the platform...?",
+                "Even some of your earliest adopters like ${sample_user_names[0]}, ${sample_user_names[1]} and ${sample_user_names[2]} haven't run a query in a while."
+            ],
+            "good": [
+                "Colour me surprised! Only ${pct_inactive}% of your users haven't run a query in the last 90 days. That's prety good.",
+                "There are a few people like ${sample_user_names[0]}, ${sample_user_names[1]} and ${sample_user_names[2]} have been using the platform recently. I'd go give them a nudge if I were you."
+            ]
+        },
+        "tip": [
+            "You can find all users who haven't run a query recently by querying the 'Users' explore in the System Activity model in Looker. It can help you out for your next Looker renewal."
+        ]
+    }
+]
