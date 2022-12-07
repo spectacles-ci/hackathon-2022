@@ -49,6 +49,15 @@ class DashboardUsage(BaseModel):
     query_count: int
 
 
+class QueryUsage(BaseModel):
+    query_explore: str = Field(alias="query.view")
+    query_model: str = Field(alias="query.model")
+    query_id: str = Field(alias="query.id")
+    issuer_source: str = Field(alias="history.issuer_source")
+    source: str = Field(alias="history.source")
+    database_run_count: int = Field(alias="history.database_result_query_count")
+
+
 class TestResult(BaseModel, abc.ABC):
     name: str
 
@@ -160,3 +169,19 @@ class AbandonedDashboardResult(TestResult):
     @property
     def grade(self) -> Grade:
         return "bad"
+
+
+class OverusedQueryResult(TestResult):
+    name: Literal["Overused Queries"] = "Overused Queries"
+    test_id: Literal["overused_queries"] = "overused_queries"
+    sample_overused_queries: list[QueryUsage]  # sorted by database_run_count desc
+
+    @property
+    def grade(self) -> Grade:
+        # 3360 = 24 * 7 * 20
+        if self.sample_overused_queries[0].database_run_count > 3360:
+            return "bad"
+        elif self.sample_overused_queries[0].database_run_count > 1680:
+            return "ok"
+        else:
+            return "good"
