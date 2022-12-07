@@ -19,6 +19,8 @@ from rmli.models import (
     LookerConfig,
     SlowExploresResult,
     UnusedExploreResult,
+    AbandonedDashboardResult,
+    DashboardUsage,
 )
 
 app = FastAPI()
@@ -108,9 +110,75 @@ async def unused_explores(config: LookerConfig) -> UnusedExploreResult:
     return UnusedExploreResult(unused_explores=top_3)
 
 
+@app.post(
+    "/stats/abandoned_dashboards",
+    response_model=AbandonedDashboardResult,
+    response_model_by_alias=False,
+)
+async def abandoned_dashboards(config: LookerConfig) -> AbandonedDashboardResult:
+    client = get_looker_client(config)
+    results = await get_dashboard_usage(client)
+    dashboards = [DashboardUsage.parse_obj(result) for result in results]
+    dashboard_count = len(dashboards)
+    abandoned_dashboards = [
+        dashboard for dashboard in dashboards if dashboard.query_count == 0
+    ]
+    abandoned_dashboard_count = len(abandoned_dashboards)
+    pct_abandoned = abandoned_dashboard_count / dashboard_count
+    sample_abandoned_dashboards = sorted(
+        abandoned_dashboards, key=lambda dashboard: dashboard.dashboard_id
+    )[:3]
+
+    return AbandonedDashboardResult(
+        pct_abandoned=pct_abandoned,
+        count_abandoned=abandoned_dashboard_count,
+        sample_abandoned_dashboards=sample_abandoned_dashboards,
+    )
+
+
 @app.get("/")
 async def health_check() -> str:
     return "ok"
+
+
+@backoff.on_exception(backoff.expo, SDKError, max_tries=3)
+async def get_dashboard_usage(
+    client: LookerSdkClient,
+) -> list[dict[str, Any]]:
+    """Get all dashboards and their query volume in the last 90 days"""
+    all_dashboards = client.all_dashboards(fields="id,title")
+
+    query = WriteQuery(
+        model="system__activity",
+        view="history",
+        fields=["history.real_dash_id", "history.query_run_count"],
+        filters={"history.created_date": "last 90 days"},
+    )
+    try:
+        results_raw = client.run_inline_query(result_format="json", body=query)
+    except SDKError as e:
+        # TODO: Replace with our own error handling
+        raise e
+    else:
+        results = json.loads(results_raw)
+
+    output = []
+
+    for dashboard in all_dashboards:
+        query_count = 0
+        for result in results:
+            if result["history.real_dash_id"] == dashboard.id:
+                query_count += result["history.query_run_count"]
+        if dashboard.id and dashboard.title:
+            output.append(
+                {
+                    "dashboard_id": dashboard.id,
+                    "dashboard_title": dashboard.title,
+                    "query_count": query_count,
+                }
+            )
+
+    return output
 
 
 @backoff.on_exception(backoff.expo, SDKError, max_tries=3)
