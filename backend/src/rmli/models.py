@@ -175,7 +175,12 @@ class AbandonedDashboardResult(TestResult):
 
     @property
     def grade(self) -> Grade:
-        return "bad"
+        if self.pct_abandoned > 0.1:
+            return "bad"
+        elif self.pct_abandoned > 0.05:
+            return "ok"
+        else:
+            return "good"
 
 
 class OverusedQueryResult(TestResult):
