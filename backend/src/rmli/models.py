@@ -96,7 +96,6 @@ class SlowExploresResult(TestResult):
             return "ok"
         else:
             return "good"
-        return "bad"
 
 
 class ExploreSizeResult(TestResult):
