@@ -33,12 +33,17 @@ export default function Auth() {
           <h1 className="mt-6 text-center text-4xl font-bold tracking-tight text-gray-900">
             Roast My Looker Instance
           </h1>
-          <p className="px-4 mt-8 text-center text-sm text-gray-600 leading-normal">
+          <p className="px-4 mt-8 text-center text-sm text-gray-600 leading-relaxed">
             We'll run some queries to see if your Looker instance is running as
             smoothly as you think it is.
           </p>
-          <p className="px-4 mt-4 text-center text-sm text-gray-600 leading-normal">
-            Enter API credentials for a Looker user with the Admin role.*
+          <p className="px-4 mt-4 text-center text-sm text-gray-600 leading-relaxed">
+            Enter API credentials for a Looker user with the Admin role or
+            Developer role + the{" "}
+            <span className="bg-gray-200 rounded text-gray-500 p-0.5 font-mono text-sm">
+              see_system_activity
+            </span>{" "}
+            permission.*
           </p>
         </div>
 
