@@ -1,8 +1,7 @@
 import type { LoaderArgs } from "@remix-run/node";
 import { SlowExploresResult } from "../../models";
 import { getSession } from "~/sessions";
-import { getCredentials } from "../auth";
-import { fetchStats } from "~/utils";
+import { fetchStats, getCredentials } from "~/utils";
 
 export const loader = async ({ request }: LoaderArgs) => {
   const session = await getSession(request.headers.get("Cookie"));
