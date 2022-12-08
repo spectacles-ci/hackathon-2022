@@ -30,11 +30,15 @@ export default function Auth() {
     <>
       <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="mt-6 text-center text-4xl font-bold tracking-tight text-gray-900">
             Roast My Looker Instance
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your Looker API credentials to get started.
+          </h1>
+          <p className="px-4 mt-8 text-center text-sm text-gray-600 leading-normal">
+            We'll run some queries to see if your Looker instance is running as
+            smoothly as you think it is.
+          </p>
+          <p className="px-4 mt-4 text-center text-sm text-gray-600 leading-normal">
+            Enter API credentials for a Looker user with the Admin role.*
           </p>
         </div>
 
@@ -120,12 +124,28 @@ export default function Auth() {
                   type="submit"
                   className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
-                  🔥 Roast Me
+                  🔥 Let's Roast
                 </button>
               </div>
             </form>
           </div>
+          <p className="mt-8 text-center text-xs text-gray-500 leading-normal">
+            Why? We need credentials for an Admin user so we can query the{" "}
+            <a
+              className="underline"
+              href="https://cloud.google.com/looker/docs/system-activity-pages"
+            >
+              System Activity Explore
+            </a>
+            . Don't worry, we'll keep them encrypted and won't store them.
+          </p>
         </div>
+        <p className="mt-8 pb-8 text-center text-xs text-gray-500">
+          Built with ❤️ (and snark) by the team at{" "}
+          <a className="underline" href="https://spectacles.dev">
+            Spectacles
+          </a>
+        </p>
       </div>
     </>
   );

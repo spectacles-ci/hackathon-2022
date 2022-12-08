@@ -374,7 +374,7 @@ export default function Roast() {
           </AnimatePresence>
         </div>
         <p className="mt-8 pb-8 text-center text-sm text-gray-400">
-          Built with ❤️ (and sass) by the team at{" "}
+          Built with ❤️ (and snark) by the team at{" "}
           <a className="underline" href="https://spectacles.dev">
             Spectacles
           </a>
