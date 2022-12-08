@@ -8,7 +8,7 @@ export async function storeCredentials(
   clientSecret: string
 ) {
   const client = new SecretManagerServiceClient();
-  const secretId = crypto.createHash("md5").update(baseUrl).digest("hex");
+  const secretId = crypto.randomUUID();
   const [secret] = await client.createSecret({
     parent: `projects/${process.env.GOOGLE_CLOUD_PROJECT}`,
     secretId,
