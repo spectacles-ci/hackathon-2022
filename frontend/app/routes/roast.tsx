@@ -76,58 +76,57 @@ export default function Roast() {
     }
   }, [messages]);
 
-  useEffect(() => {
-    if (inactiveUsers.type === "init") {
-      inactiveUsers.load("/stats/inactive_users");
-    } else if (inactiveUsers.type === "done") {
-      addToMessageQueue((old) => [
-        ...old,
-        {
-          text: `whoa... ${(inactiveUsers.data.pct_inactive * 100).toFixed(
-            0
-          )}% of your users haven't run a SINGLE query in the last 90 days`,
-          pause: 1000,
-        },
-        { text: "that's... pretty awful" },
-        {
-          text: `do you know ${inactiveUsers.data.sample_user_names[0]}? cause I guarantee you ${inactiveUsers.data.sample_user_names[0]} has no idea who you are lol`,
-        },
-      ]);
-    }
-  }, [inactiveUsers.type]);
+  // useEffect(() => {
+  //   if (inactiveUsers.type === "init") {
+  //     inactiveUsers.load("/stats/inactive_users");
+  //   } else if (inactiveUsers.type === "done") {
+  //     addToMessageQueue((old) => [
+  //       ...old,
+  //       {
+  //         text: `whoa... ${(inactiveUsers.data.pct_inactive * 100).toFixed(
+  //           0
+  //         )}% of your users haven't run a SINGLE query in the last 90 days`,
+  //         pause: 1000,
+  //       },
+  //       { text: "that's... pretty awful" },
+  //       {
+  //         text: `do you know ${inactiveUsers.data.sample_user_names[0]}? cause I guarantee you ${inactiveUsers.data.sample_user_names[0]} has no idea who you are lol`,
+  //       },
+  //     ]);
+  //   }
+  // }, [inactiveUsers.type]);
 
-  useEffect(() => {
-    if (slowExplores.type === "init") {
-      slowExplores.load("/stats/slow_explores");
-    } else if (slowExplores.type === "done") {
-      addToMessageQueue((old) => {
-        const data = slowExplores.data;
-        return [
-          ...old,
-          { text: "you've got some crazy slow explores 🐢" },
-          {
-            text: `like "${data.slow_explores[0]["query.model"]}.${data.slow_explores[0]["query.view"]}"`,
-          },
-          {
-            text: `that thing is a turtle. Takes ${data.slow_explores[0][
-              "history.average_runtime"
-            ].toFixed(0)} seconds to run on average`,
-          },
-          {
-            text: `or "${data.slow_explores[1]["query.model"]}.${
-              data.slow_explores[1]["query.view"]
-            }", which runs for ${data.slow_explores[1][
-              "history.average_runtime"
-            ].toFixed(0)} seconds on average`,
-          },
-          {
-            text: "Frank Slootman is worth $1.5 billion dollars. I'd imagine queries from your Looker instance made him at least half of that.",
-            pause: 1000,
-          },
-        ];
-      });
-    }
-  }, [slowExplores.type]);
+  // useEffect(() => {
+  //   if (slowExplores.type === "init") {
+  //     slowExplores.load("/stats/slow_explores");
+  //   } else if (slowExplores.type === "done") {
+  //     addToMessageQueue((old) => {
+  //       const data = slowExplores.data;
+  //       return [
+  //         ...old,
+  //         { text: "you've got some crazy slow explores 🐢" },
+  //         {
+  //           text: `like "${data.slow_explores[0]["query.model"]}.${data.slow_explores[0]["query.view"]}"`,
+  //         },
+  //         {
+  //           text: `that thing is a turtle. Takes ${data.slow_explores[0][
+  //             "history.average_runtime"
+  //           ].toFixed(0)} seconds to run on average`,
+  //         },
+  //         {
+  //           text: `or "${data.slow_explores[1]["query.model"]}.${data.slow_explores[1]["query.view"]
+  //             }", which runs for ${data.slow_explores[1][
+  //               "history.average_runtime"
+  //             ].toFixed(0)} seconds on average`,
+  //         },
+  //         {
+  //           text: "Frank Slootman is worth $1.5 billion dollars. I'd imagine queries from your Looker instance made him at least half of that.",
+  //           pause: 1000,
+  //         },
+  //       ];
+  //     });
+  //   }
+  // }, [slowExplores.type]);
 
   useEffect(() => {
     if (abandonedDashboards.type === "init") {
@@ -135,22 +134,37 @@ export default function Roast() {
     } else if (abandonedDashboards.type === "done") {
       addToMessageQueue((old) => {
         const data = abandonedDashboards.data;
-        return [
-          ...old,
-          {
-            text: `your Looker instance has ${
-              data.count_abandoned / data.pct_abandoned
-            } dashboards. wanna guess how many of them were queried over the last 90 days?`,
-          },
-          { text: "uhh... it's worse than you thought" },
-          {
-            text: `${data.count_abandoned} of your dashboards just... sat there... unused and unwanted for 90 days and 90 nights`,
-          },
-          {
-            text: `getting about as much attention as you do when you post on LinkedIn`,
-            pause: 1000,
-          },
+        let pre_response = [
+          { text: "I'm not gonna lie, I'm a little nervous about this one" },
+          { text: "Let's have a look at how much usage all those precious dashboards you built are getting..." },
+          { text: "👀" }
         ];
+        let responses = [];
+        if (data.grade === "bad") {
+          responses.push({
+            text: `your Looker instance has ${data.count_abandoned /
+              data.pct_abandoned} dashboards. wanna guess how many of them were queried over the last 90 days?`
+          });
+          responses.push({ text: "uhh... it's worse than you thought" });
+          responses.push({ text: `${data.count_abandoned} of your dashboards just... sat there... unused and unwanted for 90 days and 90 nights` });
+          responses.push({ text: `getting about as much attention as you do when you post on LinkedIn` });
+          // https://help.looker.com/hc/en-us/articles/4419767469587-Deleted-and-unused-content-for-admins
+          responses.push({ text: "maybe have a look at the unused content report in Looker and get some of those cleaned up. You'll thank me.", pause: 1000 });
+        }
+        else if (data.grade === "ok") {
+          responses.push({ text: "Do you know what? This could have been a lot worse" });
+          responses.push({ text: `you've got ${data.count_abandoned} abandoned dashboards, which is ${(data.pct_abandoned * 100).toPrecision(2)}% of your total dashboards` });
+          responses.push({ text: `that's ${data.count_abandoned} of your dashboards that haven't had a SINGLE query in the last 90 days...` });
+          // https://help.looker.com/hc/en-us/articles/4419767469587-Deleted-and-unused-content-for-admins
+          responses.push({ text: "maybe have a look at the unused content report in Looker and get some of those cleaned up. You'll thank me.", pause: 1000 });
+        }
+        else if (data.grade === "good") {
+          responses.push({ text: "Colour me surprised. This is actually pretty good. Is this a brand new Looker instance?" });
+          responses.push({ text: `you've got ${data.count_abandoned / data.pct_abandoned} dashboards in total, and only ${data.count_abandoned} of them haven't been used in the last 90 days`, pause: 1000 });
+          responses.push({ text: "That's better than most Looker instances I've seen 👏" });
+          responses.push({ text: "Proud. Of. You." });
+        };
+        return [...old, ...pre_response, ...responses];
       });
     }
   }, [abandonedDashboards.type]);
