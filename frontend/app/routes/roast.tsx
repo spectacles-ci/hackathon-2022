@@ -1,3 +1,4 @@
+import { redirect, LoaderArgs } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import {
   InactiveUserResult,
@@ -8,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import useSound from "use-sound";
 import pop from "../../public/pop.wav";
+import { getSession } from "~/sessions";
 
 const transition = {
   type: "spring",
@@ -51,6 +53,14 @@ function TypingIndicator() {
       <span></span>
     </div>
   );
+}
+
+export async function loader({ request }: LoaderArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
+  if (!session.has("credentialId")) {
+    return redirect("/auth");
+  }
+  return null;
 }
 
 export default function Roast() {
