@@ -84,41 +84,63 @@ export default function Roast() {
         const data = inactiveUsers.data;
         let pre_response = [
           { text: "This is always a good one to check" },
-          { text: "let's have a look at whether you're doing a good job at getting people to actually use Looker. self-service analytics and all that." },
-          { text: "just pulling the information from your instance now..." }
+          {
+            text: "let's have a look at whether you're doing a good job at getting people to actually use Looker. self-service analytics and all that.",
+          },
+          { text: "just pulling the information from your instance now..." },
         ];
         if (data.grade === "bad") {
           var inactive_user_responses = [
             {
-              text: `whoa... ${(data.pct_inactive * 100).toFixed(0)}% of your users haven't run a SINGLE query in the last 90 days`
+              text: `whoa... ${(data.pct_inactive * 100).toFixed(
+                0
+              )}% of your users haven't run a SINGLE query in the last 90 days`,
             },
             { text: "that's... pretty awful" },
-            { text: `do you know ${data.sample_user_names[0]}? cause I guarantee you ${inactiveUsers.data.sample_user_names[0]} has no idea who you are lol` },
-            { text: "the system activity explore... it's a thing. you should use it" }
+            {
+              text: `do you know ${data.sample_user_names[0]}? cause I guarantee you ${inactiveUsers.data.sample_user_names[0]} has no idea who you are lol`,
+            },
+            {
+              text: "the system activity explore... it's a thing. you should use it",
+            },
           ];
           if (data.sample_user_names.length > 3) {
             inactive_user_responses.push({
-              text: `maybe drop a message to ${data.sample_user_names[1]} and ${data.sample_user_names[2]} too. They are some of your oldest Looker users. For your sake, I hope they don't work at the company any more...`
+              text: `maybe drop a message to ${data.sample_user_names[1]} and ${data.sample_user_names[2]} too. They are some of your oldest Looker users. For your sake, I hope they don't work at the company any more...`,
             });
           }
-        }
-        else if (data.grade === 'ok') {
+        } else if (data.grade === "ok") {
           var inactive_user_responses = [
             { text: "like, this isn't terrible... it's not great though." },
-            { text: `${(data.pct_inactive * 100).toFixed(0)}% of you're users haven't run a single query in last little bit` },
+            {
+              text: `${(data.pct_inactive * 100).toFixed(
+                0
+              )}% of you're users haven't run a single query in last little bit`,
+            },
             { text: "and by last little bit, I mean 90 days. 90 DAYS?!" },
-            { text: `maybe go check in with ${data.sample_user_names[0]}. do they know you've wasted a Looker license on them?` },
-            { text: "you might also want to think about using the system activity explore every once in a while to see if you've got any users who are just... not using Looker" }];
-        }
-        else {
+            {
+              text: `maybe go check in with ${data.sample_user_names[0]}. do they know you've wasted a Looker license on them?`,
+            },
+            {
+              text: "you might also want to think about using the system activity explore every once in a while to see if you've got any users who are just... not using Looker",
+            },
+          ];
+        } else {
           var inactive_user_responses = [
-            { text: "hey. would you look at that. maybe you're not totally incompetent." },
-            { text: `you've got a few users who haven't run any queries in the last 90 days, but it seems it's only ${(data.pct_inactive * 100).toFixed(0)}% of them` },
-            { text: `that said, ${data.sample_user_names[0]} seems like they are totally unaware of Looker. maybe drop them a line` }];
-        };
-        return [
-          ...old, ...pre_response, ...inactive_user_responses
-        ]
+            {
+              text: "hey. would you look at that. maybe you're not totally incompetent.",
+            },
+            {
+              text: `you've got a few users who haven't run any queries in the last 90 days, but it seems it's only ${(
+                data.pct_inactive * 100
+              ).toFixed(0)}% of them`,
+            },
+            {
+              text: `that said, ${data.sample_user_names[0]} seems like they are totally unaware of Looker. maybe drop them a line`,
+            },
+          ];
+        }
+        return [...old, ...pre_response, ...inactive_user_responses];
       });
     }
   }, [inactiveUsers.type]);
@@ -130,52 +152,119 @@ export default function Roast() {
       addToMessageQueue((old) => {
         const data = slowExplores.data;
         let pre_response = [
-          { text: "you know what they say: a fast Looker instance is a Looker instance people are actually going to bother using" },
-          { text: "or something like that, I'm pretty sure. I'm not a big fan of proverbs" },
+          {
+            text: "you know what they say: a fast Looker instance is a Looker instance people are actually going to bother using",
+          },
+          {
+            text: "or something like that, I'm pretty sure. I'm not a big fan of proverbs",
+          },
           { text: "anyway, let's see how you're doing on the speed front." },
         ];
         if (data.grade === "bad") {
           var slow_explores_responses = [
             { text: "ouch. biiiiig ooof. how do people use this thing?" },
             {
-              text: `your slowest explore, "${data.slow_explores[0]["query.model"]}.${data.slow_explores[0]["query.view"]}", 
-              takes ${data.slow_explores[0]["history.average_runtime"].toFixed(0)} seconds to run on average`
+              text: `your slowest explore, "${
+                data.slow_explores[0]["query.model"]
+              }.${data.slow_explores[0]["query.view"]}", 
+              takes ${data.slow_explores[0]["history.average_runtime"].toFixed(
+                0
+              )} seconds to run on average`,
             },
             { text: "that. is. brutal." },
-            { text: `and that's the AVERAGE. the mean. one time, it took ${data.slow_explores[0]["history.max_runtime"].toFixed(0)} seconds to run.` },
-            { text: "I heard the person who ran that query quit the company the next day. I'm not sure if that's true, but I wouldn't be surprised." },
-            { text: "are your colleagues well caffeinated? They definitely have enough time to make plenty of coffee while they wait for these painfully slow explores to run." },
             {
-              text: `"${data.slow_explores[1]["query.model"]}.${data.slow_explores[1]["query.view"]}" is another one. it's slightly better, but it still takes ${data.slow_explores[1][
+              text: `and that's the AVERAGE. the mean. one time, it took ${data.slow_explores[0][
+                "history.max_runtime"
+              ].toFixed(0)} seconds to run.`,
+            },
+            {
+              text: "I heard the person who ran that query quit the company the next day. I'm not sure if that's true, but I wouldn't be surprised.",
+            },
+            {
+              text: "are your colleagues well caffeinated? They definitely have enough time to make plenty of coffee while they wait for these painfully slow explores to run.",
+            },
+            {
+              text: `"${data.slow_explores[1]["query.model"]}.${
+                data.slow_explores[1]["query.view"]
+              }" is another one. it's slightly better, but it still takes ${data.slow_explores[1][
                 "history.average_runtime"
               ].toFixed(0)} seconds on average`,
             },
-            { text: "I'm not sure what to say. I'm just going to leave this here for you to think about" },
-            { text: "maybe have a look at the history explore in the system activity model. It'll help you find more of these so you can start fixing them." }]
-        }
-        else if (data.grade === "ok") {
+            {
+              text: "I'm not sure what to say. I'm just going to leave this here for you to think about",
+            },
+            {
+              text: "maybe have a look at the history explore in the system activity model. It'll help you find more of these so you can start fixing them.",
+            },
+          ];
+        } else if (data.grade === "ok") {
           var slow_explores_responses = [
             { text: "okay... do you want the good or the bad first?" },
-            { text: "the good? I've seen worse. Not much worse, but definitely worse." },
-            { text: "that's the end of the good news. The bad news is that I've watched soccer games that finish faster than your slowest explore." },
-            { text: `"${data.slow_explores[0]["query.model"]}.${data.slow_explores[0]["query.view"]}" is the worst offender. It takes ${data.slow_explores[0]['history.average_runtime'].toFixed(0)} to complete a query on average.` },
-            { text: `that's the average runtime as well. at its worst it occasionally runs for up to ${data.slow_explores[0]['history.max_runtime'].toFixed(0)} seconds.` },
             {
-              text: `that's not the only bad explore though. "${data.slow_explores[1]["query.model"]}.${data.slow_explores[1]["query.view"]}" also runs at a glacial pace. 
-            It takes ${data.slow_explores[1]['history.average_runtime'].toFixed(0)} seconds to run on average.`
+              text: "the good? I've seen worse. Not much worse, but definitely worse.",
             },
-            { text: "maybe have a look at the history explore in the system activity model. It'll help you find more of these so you can start fixing them." }]
-        }
-        else {
+            {
+              text: "that's the end of the good news. The bad news is that I've watched soccer games that finish faster than your slowest explore.",
+            },
+            {
+              text: `"${data.slow_explores[0]["query.model"]}.${
+                data.slow_explores[0]["query.view"]
+              }" is the worst offender. It takes ${data.slow_explores[0][
+                "history.average_runtime"
+              ].toFixed(0)} to complete a query on average.`,
+            },
+            {
+              text: `that's the average runtime as well. at its worst it occasionally runs for up to ${data.slow_explores[0][
+                "history.max_runtime"
+              ].toFixed(0)} seconds.`,
+            },
+            {
+              text: `that's not the only bad explore though. "${
+                data.slow_explores[1]["query.model"]
+              }.${
+                data.slow_explores[1]["query.view"]
+              }" also runs at a glacial pace. 
+            It takes ${data.slow_explores[1]["history.average_runtime"].toFixed(
+              0
+            )} seconds to run on average.`,
+            },
+            {
+              text: "maybe have a look at the history explore in the system activity model. It'll help you find more of these so you can start fixing them.",
+            },
+          ];
+        } else {
           var slow_explores_responses = [
             { text: "not bad... not bad at all." },
             { text: `your slowest explore isn't actually that slow.` },
-            { text: `"${data.slow_explores[0]["query.model"]}.${data.slow_explores[0]["query.view"]}" takes ${data.slow_explores[0]['history.average_runtime'].toFixed(0)} seconds to run on average.` },
-            { text: `it does occasionally take up to ${data.slow_explores[0]['history.max_runtime'].toFixed(0)} seconds to run, but no one is perfect I guess.` },
-            { text: "I'm just going to assume you're dealing with Very Small Data (TM). It's easy to make explores run quickly when there's only a few rows of data in there." },
-            { text: `just so you're aware, the next slowest explore is "${data.slow_explores[1]["query.model"]}.${data.slow_explores[1]["query.view"]}". It takes ${data.slow_explores[1]['history.average_runtime'].toFixed(0)} seconds to run on average.` },
-            { text: "you can find some big public datasets online if you want to see what it's like to run Looker on real data like other companies." }]
-        };
+            {
+              text: `"${data.slow_explores[0]["query.model"]}.${
+                data.slow_explores[0]["query.view"]
+              }" takes ${data.slow_explores[0][
+                "history.average_runtime"
+              ].toFixed(0)} seconds to run on average.`,
+            },
+            {
+              text: `it does occasionally take up to ${data.slow_explores[0][
+                "history.max_runtime"
+              ].toFixed(0)} seconds to run, but no one is perfect I guess.`,
+            },
+            {
+              text: "I'm just going to assume you're dealing with Very Small Data (TM). It's easy to make explores run quickly when there's only a few rows of data in there.",
+            },
+            {
+              text: `just so you're aware, the next slowest explore is "${
+                data.slow_explores[1]["query.model"]
+              }.${
+                data.slow_explores[1]["query.view"]
+              }". It takes ${data.slow_explores[1][
+                "history.average_runtime"
+              ].toFixed(0)} seconds to run on average.`,
+            },
+            {
+              text: "you can find some big public datasets online if you want to see what it's like to run Looker on real data like other companies.",
+            },
+          ];
+        }
         return [...old, ...pre_response, ...slow_explores_responses];
       });
     }
@@ -189,34 +278,67 @@ export default function Roast() {
         const data = abandonedDashboards.data;
         let pre_response = [
           { text: "I'm not gonna lie, I'm a little nervous about this one" },
-          { text: "Let's have a look at how much usage all those precious dashboards you built are getting..." },
-          { text: "👀" }
+          {
+            text: "Let's have a look at how much usage all those precious dashboards you built are getting...",
+          },
+          { text: "👀" },
         ];
         if (data.grade === "bad") {
-          var abandoned_dashboard_responses = [{
-            text: `your Looker instance has ${data.count_abandoned /
-              data.pct_abandoned} dashboards. wanna guess how many of them were queried over the last 90 days?`
-          }, { text: "uhh... it's worse than you thought" }, {
-            text: `${data.count_abandoned} of your dashboards just... sat there... unused and unwanted for 90 days and 90 nights`
-          }, { text: `getting about as much attention as you do when you post on LinkedIn` },
-          // https://help.looker.com/hc/en-us/articles/4419767469587-Deleted-and-unused-content-for-admins
-          { text: "maybe have a look at the unused content report in Looker and get some of those cleaned up. You'll thank me.", pause: 1000 }];
-        }
-        else if (data.grade === "ok") {
+          var abandoned_dashboard_responses = [
+            {
+              text: `your Looker instance has ${
+                data.count_abandoned / data.pct_abandoned
+              } dashboards. wanna guess how many of them were queried over the last 90 days?`,
+            },
+            { text: "uhh... it's worse than you thought" },
+            {
+              text: `${data.count_abandoned} of your dashboards just... sat there... unused and unwanted for 90 days and 90 nights`,
+            },
+            {
+              text: `getting about as much attention as you do when you post on LinkedIn`,
+            },
+            // https://help.looker.com/hc/en-us/articles/4419767469587-Deleted-and-unused-content-for-admins
+            {
+              text: "maybe have a look at the unused content report in Looker and get some of those cleaned up. You'll thank me.",
+              pause: 1000,
+            },
+          ];
+        } else if (data.grade === "ok") {
           var abandoned_dashboard_responses = [
             { text: "Do you know what? This could have been a lot worse" },
-            { text: `you've got ${data.count_abandoned} abandoned dashboards, which is ${(data.pct_abandoned * 100).toPrecision(2)}% of your total dashboards` },
-            { text: `that's ${data.count_abandoned} of your dashboards that haven't had a SINGLE query in the last 90 days...` },
+            {
+              text: `you've got ${
+                data.count_abandoned
+              } abandoned dashboards, which is ${(
+                data.pct_abandoned * 100
+              ).toPrecision(2)}% of your total dashboards`,
+            },
+            {
+              text: `that's ${data.count_abandoned} of your dashboards that haven't had a SINGLE query in the last 90 days...`,
+            },
             // https://help.looker.com/hc/en-us/articles/4419767469587-Deleted-and-unused-content-for-admins
-            { text: "maybe have a look at the unused content report in Looker and get some of those cleaned up. You'll thank me.", pause: 1000 }];
-        }
-        else {
+            {
+              text: "maybe have a look at the unused content report in Looker and get some of those cleaned up. You'll thank me.",
+              pause: 1000,
+            },
+          ];
+        } else {
           var abandoned_dashboard_responses = [
-            { text: "Colour me surprised. This is actually pretty good. Is this a brand new Looker instance?" },
-            { text: `you've got ${data.count_abandoned / data.pct_abandoned} dashboards in total, and only ${data.count_abandoned} of them haven't been used in the last 90 days`, pause: 1000 },
+            {
+              text: "Colour me surprised. This is actually pretty good. Is this a brand new Looker instance?",
+            },
+            {
+              text: `you've got ${
+                data.count_abandoned / data.pct_abandoned
+              } dashboards in total, and only ${
+                data.count_abandoned
+              } of them haven't been used in the last 90 days`,
+              pause: 1000,
+            },
             { text: "That's better than most Looker instances I've seen 👏" },
-            { text: "Proud. Of. You." }];
-        };
+            { text: "Proud. Of. You." },
+          ];
+        }
         return [...old, ...pre_response, ...abandoned_dashboard_responses];
       });
     }
@@ -244,7 +366,7 @@ export default function Roast() {
             {isTyping && <TypingIndicator />}
           </AnimatePresence>
         </div>
-        <p className="mt-8 text-center text-sm text-gray-400">
+        <p className="mt-8 pb-8 text-center text-sm text-gray-400">
           Built with ❤️ (and sass) by the team at{" "}
           <a className="underline" href="https://spectacles.dev">
             Spectacles
