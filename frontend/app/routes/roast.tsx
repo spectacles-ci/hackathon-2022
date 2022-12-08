@@ -71,30 +71,57 @@ export default function Roast() {
         setTyping(false);
         playSound();
         setMessages((old) => [...old, nextMessage]);
-      }, 2000 + nextMessage.text.length * 10);
+      }, 2000 + nextMessage.text.length * 20);
       return () => clearTimeout(timer);
     }
   }, [messages]);
 
-  // useEffect(() => {
-  //   if (inactiveUsers.type === "init") {
-  //     inactiveUsers.load("/stats/inactive_users");
-  //   } else if (inactiveUsers.type === "done") {
-  //     addToMessageQueue((old) => [
-  //       ...old,
-  //       {
-  //         text: `whoa... ${(inactiveUsers.data.pct_inactive * 100).toFixed(
-  //           0
-  //         )}% of your users haven't run a SINGLE query in the last 90 days`,
-  //         pause: 1000,
-  //       },
-  //       { text: "that's... pretty awful" },
-  //       {
-  //         text: `do you know ${inactiveUsers.data.sample_user_names[0]}? cause I guarantee you ${inactiveUsers.data.sample_user_names[0]} has no idea who you are lol`,
-  //       },
-  //     ]);
-  //   }
-  // }, [inactiveUsers.type]);
+  useEffect(() => {
+    if (inactiveUsers.type === "init") {
+      inactiveUsers.load("/stats/inactive_users");
+    } else if (inactiveUsers.type === "done") {
+      addToMessageQueue((old) => {
+        const data = inactiveUsers.data;
+        let pre_response = [
+          { text: "Let's start off with an easy one" },
+          { text: "let's have a look at whether you're doing a good job at getting people to actually use Looker. self-service analytics and all that." },
+          { text: "just pulling the information from your instance now..." }
+        ];
+        if (data.grade === "bad") {
+          var inactive_user_responses = [
+            {
+              text: `whoa... ${(data.pct_inactive * 100).toFixed(0)}% of your users haven't run a SINGLE query in the last 90 days`
+            },
+            { text: "that's... pretty awful" },
+            { text: `do you know ${data.sample_user_names[0]}? cause I guarantee you ${inactiveUsers.data.sample_user_names[0]} has no idea who you are lol` },
+            { text: "the system activity explore... it's a thing. you should use it" }
+          ];
+          if (data.sample_user_names.length > 3) {
+            inactive_user_responses.push({
+              text: `maybe drop a message to ${data.sample_user_names[1]} and ${data.sample_user_names[2]} too. They are some of your oldest Looker users. For your sake, I hope they don't work at the company any more...`
+            });
+          }
+        }
+        else if (data.grade === 'ok') {
+          var inactive_user_responses = [
+            { text: "like, this isn't terrible... it's not great though." },
+            { text: `${(data.pct_inactive * 100).toFixed(0)}% of you're users haven't run a single query in last little bit` },
+            { text: "and by last little bit, I mean 90 days. 90 DAYS?!" },
+            { text: `maybe go check in with ${data.sample_user_names[0]}. do they know you've wasted a Looker license on them?` },
+            { text: "you might also want to think about using the system activity explore every once in a while to see if you've got any users who are just... not using Looker" }];
+        }
+        else {
+          var inactive_user_responses = [
+            { text: "hey. would you look at that. maybe you're not totally incompetent." },
+            { text: `you've got a few users who haven't run any queries in the last 90 days, but it seems it's only ${(data.pct_inactive * 100).toFixed(0)}% of them` },
+            { text: `that said, ${data.sample_user_names[0]} seems like they are totally unaware of Looker. maybe drop them a line` }];
+        };
+        return [
+          ...old, ...pre_response, ...inactive_user_responses
+        ]
+      });
+    }
+  }, [inactiveUsers.type]);
 
   // useEffect(() => {
   //   if (slowExplores.type === "init") {
@@ -139,32 +166,32 @@ export default function Roast() {
           { text: "Let's have a look at how much usage all those precious dashboards you built are getting..." },
           { text: "👀" }
         ];
-        let responses = [];
         if (data.grade === "bad") {
-          responses.push({
+          var abandoned_dashboard_responses = [{
             text: `your Looker instance has ${data.count_abandoned /
               data.pct_abandoned} dashboards. wanna guess how many of them were queried over the last 90 days?`
-          });
-          responses.push({ text: "uhh... it's worse than you thought" });
-          responses.push({ text: `${data.count_abandoned} of your dashboards just... sat there... unused and unwanted for 90 days and 90 nights` });
-          responses.push({ text: `getting about as much attention as you do when you post on LinkedIn` });
+          }, { text: "uhh... it's worse than you thought" }, {
+            text: `${data.count_abandoned} of your dashboards just... sat there... unused and unwanted for 90 days and 90 nights`
+          }, { text: `getting about as much attention as you do when you post on LinkedIn` },
           // https://help.looker.com/hc/en-us/articles/4419767469587-Deleted-and-unused-content-for-admins
-          responses.push({ text: "maybe have a look at the unused content report in Looker and get some of those cleaned up. You'll thank me.", pause: 1000 });
+          { text: "maybe have a look at the unused content report in Looker and get some of those cleaned up. You'll thank me.", pause: 1000 }];
         }
         else if (data.grade === "ok") {
-          responses.push({ text: "Do you know what? This could have been a lot worse" });
-          responses.push({ text: `you've got ${data.count_abandoned} abandoned dashboards, which is ${(data.pct_abandoned * 100).toPrecision(2)}% of your total dashboards` });
-          responses.push({ text: `that's ${data.count_abandoned} of your dashboards that haven't had a SINGLE query in the last 90 days...` });
-          // https://help.looker.com/hc/en-us/articles/4419767469587-Deleted-and-unused-content-for-admins
-          responses.push({ text: "maybe have a look at the unused content report in Looker and get some of those cleaned up. You'll thank me.", pause: 1000 });
+          var abandoned_dashboard_responses = [
+            { text: "Do you know what? This could have been a lot worse" },
+            { text: `you've got ${data.count_abandoned} abandoned dashboards, which is ${(data.pct_abandoned * 100).toPrecision(2)}% of your total dashboards` },
+            { text: `that's ${data.count_abandoned} of your dashboards that haven't had a SINGLE query in the last 90 days...` },
+            // https://help.looker.com/hc/en-us/articles/4419767469587-Deleted-and-unused-content-for-admins
+            { text: "maybe have a look at the unused content report in Looker and get some of those cleaned up. You'll thank me.", pause: 1000 }];
         }
-        else if (data.grade === "good") {
-          responses.push({ text: "Colour me surprised. This is actually pretty good. Is this a brand new Looker instance?" });
-          responses.push({ text: `you've got ${data.count_abandoned / data.pct_abandoned} dashboards in total, and only ${data.count_abandoned} of them haven't been used in the last 90 days`, pause: 1000 });
-          responses.push({ text: "That's better than most Looker instances I've seen 👏" });
-          responses.push({ text: "Proud. Of. You." });
+        else {
+          var abandoned_dashboard_responses = [
+            { text: "Colour me surprised. This is actually pretty good. Is this a brand new Looker instance?" },
+            { text: `you've got ${data.count_abandoned / data.pct_abandoned} dashboards in total, and only ${data.count_abandoned} of them haven't been used in the last 90 days`, pause: 1000 },
+            { text: "That's better than most Looker instances I've seen 👏" },
+            { text: "Proud. Of. You." }];
         };
-        return [...old, ...pre_response, ...responses];
+        return [...old, ...pre_response, ...abandoned_dashboard_responses];
       });
     }
   }, [abandonedDashboards.type]);
