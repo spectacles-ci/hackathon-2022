@@ -790,9 +790,7 @@ video {
 .typing-indicator {
   background-color: #e6e7ed;
   will-change: transform;
-  /* width: auto; */
   padding: 15px;
-  /* display: table; */
   animation: 2s bulge infinite ease-out;
 }
 

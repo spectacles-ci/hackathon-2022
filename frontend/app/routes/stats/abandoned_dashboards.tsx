@@ -1,19 +1,18 @@
-import { json } from "@remix-run/node";
+import type { LoaderArgs } from "@remix-run/node";
 import { AbandonedDashboardResult } from "../../models";
+import { getSession } from "~/sessions";
+import { fetchStats, getCredentials } from "~/utils";
 
-export const loader = async () => {
-  const response = await fetch(
-    `${process.env.API_URL}/stats/abandoned_dashboards`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        host_url: process.env.LOOKER_BASE_URL,
-        port: 19999,
-        client_id: process.env.LOOKER_CLIENT_ID,
-        client_secret: process.env.LOOKER_CLIENT_SECRET,
-      }),
-      headers: { "Content-Type": "application/json" },
-    }
+export const loader = async ({ request }: LoaderArgs) => {
+  const session = await getSession(request.headers.get("Cookie"));
+  const credentialId = session.get("credentialId");
+  const { baseUrl, clientId, clientSecret } = await getCredentials(
+    credentialId
   );
-  return json<AbandonedDashboardResult>(await response.json());
+  return await fetchStats<AbandonedDashboardResult>(
+    "/stats/abandoned_dashboards",
+    baseUrl,
+    clientId,
+    clientSecret
+  );
 };
