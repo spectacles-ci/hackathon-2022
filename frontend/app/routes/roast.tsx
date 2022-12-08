@@ -34,7 +34,7 @@ type Message = {
 };
 
 const initialMessages: Message[] = [
-  { text: "welcome to RMLI" },
+  { text: "hello hello" },
   { text: "let's get to ROASTING! 🔥🔥🍗🔥🔥 mwahaha" },
   { text: "taking a look (heh) at your Looker instance", pause: 10000 },
 ];
@@ -45,7 +45,7 @@ function sleep(ms: number) {
 
 function TypingIndicator() {
   return (
-    <div className="mt-1 rounded-3xl typing-indicator">
+    <div className="mt-1 rounded-3xl typing-indicator flex self-start">
       <span></span>
       <span></span>
       <span></span>
@@ -156,24 +156,34 @@ export default function Roast() {
   }, [abandonedDashboards.type]);
 
   return (
-    <div className="mx-auto max-w-xl sm:px-6 lg:px-8 py-20 m-auto">
-      <AnimatePresence>
-        <ol className="flex flex-col items-start max-w-md p-0 list-none">
-          {messages.map(({ text }) => (
-            <motion.li
-              key={text}
-              className="bg-gray-200 rounded-xl px-3 py-2.5 leading-6 break-words mb-3"
-              initial="initial"
-              animate="enter"
-              variants={variants}
-              layout
-            >
-              {text}
-            </motion.li>
-          ))}
-        </ol>
-        {isTyping && <TypingIndicator />}
-      </AnimatePresence>
-    </div>
+    <>
+      <div className="flex flex-col h-screen mx-auto max-w-xl sm:px-6 lg:px-8 py-20 m-auto">
+        <div className="flex flex-col grow">
+          <AnimatePresence>
+            <ol className="flex flex-col items-start max-w-md p-0 list-none">
+              {messages.map(({ text }) => (
+                <motion.li
+                  key={text}
+                  className="bg-gray-200 rounded-xl px-3 py-2.5 leading-6 break-words mb-3"
+                  initial="initial"
+                  animate="enter"
+                  variants={variants}
+                  layout
+                >
+                  {text}
+                </motion.li>
+              ))}
+            </ol>
+            {isTyping && <TypingIndicator />}
+          </AnimatePresence>
+        </div>
+        <p className="mt-8 text-center text-sm text-gray-400">
+          Built with ❤️ (and sass) by the team at{" "}
+          <a className="underline" href="https://spectacles.dev">
+            Spectacles
+          </a>
+        </p>
+      </div>
+    </>
   );
 }
