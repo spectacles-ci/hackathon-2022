@@ -46,7 +46,13 @@ class AppApiSettings(looker_sdk.api_settings.ApiSettings):
 
 def get_looker_client(config: LookerConfig) -> LookerSdkClient:
     """Set up the Looker API client using a LookerConfig."""
-    return looker_sdk.init40(config_settings=AppApiSettings(**dict(config)))
+    try:
+        client = looker_sdk.init40(config_settings=AppApiSettings(**dict(config)))
+    except SDKError:
+        config.port = 443
+        client = looker_sdk.init40(config_settings=AppApiSettings(**dict(config)))
+
+    return client
 
 
 @app.post("/stats/inactive_users", response_model=InactiveUserResult)
