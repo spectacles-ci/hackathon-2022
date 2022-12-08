@@ -101,6 +101,8 @@ export default function Auth() {
                     name="client_id"
                     type="text"
                     required
+                    minLength={20}
+                    maxLength={20}
                     className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
@@ -119,6 +121,8 @@ export default function Auth() {
                     name="client_secret"
                     type="password"
                     required
+                    minLength={24}
+                    maxLength={24}
                     className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
