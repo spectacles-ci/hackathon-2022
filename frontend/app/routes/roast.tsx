@@ -38,7 +38,9 @@ type Message = {
 const initialMessages: Message[] = [
   { text: "hello hello" },
   { text: "let's get to ROASTING! 🔥🔥🍗🔥🔥 mwahaha" },
-  { text: "taking a look (heh) at your Looker instance", pause: 10000 },
+  {
+    text: "running some API and system activity queries to take a look (heh) at your Looker instance",
+  },
 ];
 
 function sleep(ms: number) {
@@ -102,9 +104,9 @@ export default function Roast() {
       addToMessageQueue((old) => {
         const data = inactiveUsers.data;
         let pre_response = [
-          { text: "This is always a good one to check" },
+          { text: "🤝" },
           {
-            text: "let's have a look at whether you're doing a good job at getting people to actually use Looker. self-service analytics and all that.",
+            text: "let's have a look at whether you're doing a good job at getting people to actually use Looker. ya know, self-service analytics and all that.",
           },
           { text: "just pulling the information from your instance now..." },
         ];
@@ -171,23 +173,27 @@ export default function Roast() {
       addToMessageQueue((old) => {
         const data = slowExplores.data;
         let pre_response = [
+          { text: "🏎" },
           {
-            text: "you know what they say: a fast Looker instance is a Looker instance people are actually going to bother using",
+            text: "you know what they say: a fast Looker instance is a Looker instance people will actually bother to use",
           },
           {
-            text: "or something like that, I'm pretty sure. I'm not a big fan of proverbs",
+            text: "or something like that, I'm pretty sure. Not a big fan of proverbs",
           },
-          { text: "anyway, let's see how you're doing on the speed front." },
+          { text: "anyway, let's see how you're doing on the speed front" },
         ];
         if (data.grade === "bad") {
           var slow_explores_responses = [
-            { text: "ouch. biiiiig ooof. how do people use this thing?" },
             {
-              text: `your slowest explore, "${data.slow_explores[0]["query.model"]
-                }.${data.slow_explores[0]["query.view"]}", 
+              text: "😩 biiiiig ooof. how do people at your company even use this thing?",
+            },
+            {
+              text: `your slowest explore, "${
+                data.slow_explores[0]["query.model"]
+              }.${data.slow_explores[0]["query.view"]}", 
               takes ${data.slow_explores[0]["history.average_runtime"].toFixed(
-                  0
-                )} seconds to run on average`,
+                0
+              )} seconds to run on average`,
             },
             { text: "that. is. brutal." },
             {
@@ -196,19 +202,20 @@ export default function Roast() {
               ].toFixed(0)} seconds to run.`,
             },
             {
-              text: "I heard the person who ran that query quit the company the next day. I'm not sure if that's true, but I wouldn't be surprised.",
+              text: "heard the person who ran that query quit the company the next day. I'm not sure if that's true, but I wouldn't be surprised.",
             },
             {
               text: "are your colleagues well caffeinated? They definitely have enough time to make plenty of coffee while they wait for these painfully slow explores to run.",
             },
             {
-              text: `"${data.slow_explores[1]["query.model"]}.${data.slow_explores[1]["query.view"]
-                }" is another one. it's slightly better, but it still takes ${data.slow_explores[1][
-                  "history.average_runtime"
-                ].toFixed(0)} seconds on average`,
+              text: `"${data.slow_explores[1]["query.model"]}.${
+                data.slow_explores[1]["query.view"]
+              }" is another one. it's slightly better, but it still takes ${data.slow_explores[1][
+                "history.average_runtime"
+              ].toFixed(0)} seconds on average`,
             },
             {
-              text: "I'm not sure what to say. I'm just going to leave this here for you to think about",
+              text: "i'm not sure what to say. I'm just going to leave this here for you to think about",
             },
             {
               text: "maybe have a look at the history explore in the system activity model. It'll help you find more of these so you can start fixing them.",
@@ -224,10 +231,11 @@ export default function Roast() {
               text: "that's the end of the good news. The bad news is that I've watched soccer games that finish faster than your slowest explore.",
             },
             {
-              text: `"${data.slow_explores[0]["query.model"]}.${data.slow_explores[0]["query.view"]
-                }" is the worst offender. It takes ${data.slow_explores[0][
-                  "history.average_runtime"
-                ].toFixed(0)} to complete a query on average.`,
+              text: `"${data.slow_explores[0]["query.model"]}.${
+                data.slow_explores[0]["query.view"]
+              }" is the worst offender. It takes ${data.slow_explores[0][
+                "history.average_runtime"
+              ].toFixed(0)} to complete a query on average.`,
             },
             {
               text: `that's the average runtime as well. at its worst it occasionally runs for up to ${data.slow_explores[0][
@@ -235,12 +243,14 @@ export default function Roast() {
               ].toFixed(0)} seconds.`,
             },
             {
-              text: `that's not the only bad explore though. "${data.slow_explores[1]["query.model"]
-                }.${data.slow_explores[1]["query.view"]
-                }" also runs at a glacial pace. 
+              text: `that's not the only bad explore though. "${
+                data.slow_explores[1]["query.model"]
+              }.${
+                data.slow_explores[1]["query.view"]
+              }" also runs at a glacial pace. 
             It takes ${data.slow_explores[1]["history.average_runtime"].toFixed(
-                  0
-                )} seconds to run on average.`,
+              0
+            )} seconds to run on average.`,
             },
             {
               text: "maybe have a look at the history explore in the system activity model. It'll help you find more of these so you can start fixing them.",
@@ -251,10 +261,11 @@ export default function Roast() {
             { text: "not bad... not bad at all." },
             { text: `your slowest explore isn't actually that slow.` },
             {
-              text: `"${data.slow_explores[0]["query.model"]}.${data.slow_explores[0]["query.view"]
-                }" takes ${data.slow_explores[0][
-                  "history.average_runtime"
-                ].toFixed(0)} seconds to run on average.`,
+              text: `"${data.slow_explores[0]["query.model"]}.${
+                data.slow_explores[0]["query.view"]
+              }" takes ${data.slow_explores[0][
+                "history.average_runtime"
+              ].toFixed(0)} seconds to run on average.`,
             },
             {
               text: `it does occasionally take up to ${data.slow_explores[0][
@@ -262,14 +273,16 @@ export default function Roast() {
               ].toFixed(0)} seconds to run, but no one is perfect I guess.`,
             },
             {
-              text: "I'm just going to assume you're dealing with Very Small Data (TM). It's easy to make explores run quickly when there's only a few rows of data in there.",
+              text: "i'm just going to assume you're dealing with Very Small Data™️ It's easy to make explores run quickly when there's only a few rows of data in there.",
             },
             {
-              text: `just so you're aware, the next slowest explore is "${data.slow_explores[1]["query.model"]
-                }.${data.slow_explores[1]["query.view"]
-                }". It takes ${data.slow_explores[1][
-                  "history.average_runtime"
-                ].toFixed(0)} seconds to run on average.`,
+              text: `just so you're aware, the next slowest explore is "${
+                data.slow_explores[1]["query.model"]
+              }.${
+                data.slow_explores[1]["query.view"]
+              }". It takes ${data.slow_explores[1][
+                "history.average_runtime"
+              ].toFixed(0)} seconds to run on average.`,
             },
             {
               text: "you can find some big public datasets online if you want to see what it's like to run Looker on real data like other companies.",
@@ -288,17 +301,18 @@ export default function Roast() {
       addToMessageQueue((old) => {
         const data = abandonedDashboards.data;
         let pre_response = [
-          { text: "I'm not gonna lie, I'm a little nervous about this one" },
-          {
-            text: "Let's have a look at how much usage all those precious dashboards you built are getting...",
-          },
           { text: "👀" },
+          { text: "not gonna lie, I'm a little nervous about this next one" },
+          {
+            text: "let's have a look at how much usage all those precious dashboards you built are getting...",
+          },
         ];
         if (data.grade === "bad") {
           var abandoned_dashboard_responses = [
             {
-              text: `your Looker instance has ${data.count_abandoned / data.pct_abandoned
-                } dashboards. wanna guess how many of them were queried over the last 90 days?`,
+              text: `your Looker instance has ${
+                data.count_abandoned / data.pct_abandoned
+              } dashboards. wanna guess how many of them were queried over the last 90 days?`,
             },
             { text: "uhh... it's worse than you thought" },
             {
@@ -315,12 +329,13 @@ export default function Roast() {
           ];
         } else if (data.grade === "ok") {
           var abandoned_dashboard_responses = [
-            { text: "Do you know what? This could have been a lot worse" },
+            { text: "do you know what? This could have been a lot worse" },
             {
-              text: `you've got ${data.count_abandoned
-                } abandoned dashboards, which is ${(
-                  data.pct_abandoned * 100
-                ).toPrecision(2)}% of your total dashboards`,
+              text: `you've got ${
+                data.count_abandoned
+              } abandoned dashboards, which is ${(
+                data.pct_abandoned * 100
+              ).toPrecision(2)}% of your total dashboards`,
             },
             {
               text: `that's ${data.count_abandoned} of your dashboards that haven't had a SINGLE query in the last 90 days...`,
@@ -334,16 +349,18 @@ export default function Roast() {
         } else {
           var abandoned_dashboard_responses = [
             {
-              text: "Colour me surprised. This is actually pretty good. Is this a brand new Looker instance?",
+              text: "huh. This is actually pretty good. Did a consultant set this up for you? Is this a brand new Looker instance?",
             },
             {
-              text: `you've got ${data.count_abandoned / data.pct_abandoned
-                } dashboards in total, and only ${data.count_abandoned
-                } of them haven't been used in the last 90 days`,
+              text: `you've got ${
+                data.count_abandoned / data.pct_abandoned
+              } dashboards in total, and only ${
+                data.count_abandoned
+              } of them haven't been used in the last 90 days`,
               pause: 1000,
             },
-            { text: "That's better than most Looker instances I've seen 👏" },
-            { text: "Proud. Of. You." },
+            { text: "that's better than most Looker instances I've seen 👏" },
+            { text: "PROUD 👏 OF 👏 YOU 👏" },
           ];
         }
         return [...old, ...pre_response, ...abandoned_dashboard_responses];
