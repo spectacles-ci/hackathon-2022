@@ -1,16 +1,13 @@
-import { createCookieSessionStorage } from "@remix-run/node";
+import { createCookieSessionStorage } from "@remix-run/node"; // or cloudflare/deno
 
 const { getSession, commitSession, destroySession } =
   createCookieSessionStorage({
-    // a Cookie from `createCookie` or the CookieOptions to create one
     cookie: {
       name: "__session",
-      domain: "spectacles.dev",
-      httpOnly: true,
-      maxAge: 60,
-      path: "/",
+      domain: process.env.COOKIE_DOMAIN,
+      httpOnly: false,
+      maxAge: 86400,
       sameSite: "lax",
-      secrets: ["s3cret1"],
       secure: true,
     },
   });

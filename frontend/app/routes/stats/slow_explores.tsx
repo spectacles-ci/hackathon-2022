@@ -1,16 +1,19 @@
-import { json } from "@remix-run/node";
+import type { LoaderArgs } from "@remix-run/node";
 import { SlowExploresResult } from "../../models";
+import { getSession } from "~/sessions";
+import { getCredentials } from "../auth";
+import { fetchStats } from "~/utils";
 
-export const loader = async () => {
-  const response = await fetch(`${process.env.API_URL}/stats/slow_explores`, {
-    method: "POST",
-    body: JSON.stringify({
-      host_url: process.env.LOOKER_BASE_URL,
-      port: 19999,
-      client_id: process.env.LOOKER_CLIENT_ID,
-      client_secret: process.env.LOOKER_CLIENT_SECRET,
-    }),
-    headers: { "Content-Type": "application/json" },
-  });
-  return json<SlowExploresResult>(await response.json());
+export const loader = async ({ request }: LoaderArgs) => {
+  const session = await getSession(request.headers.get("Cookie"));
+  const credentialId = session.get("credentialId");
+  const { baseUrl, clientId, clientSecret } = await getCredentials(
+    credentialId
+  );
+  return await fetchStats<SlowExploresResult>(
+    "/stats/slow_explores",
+    baseUrl,
+    clientId,
+    clientSecret
+  );
 };
