@@ -136,7 +136,7 @@ export default function Roast() {
             {
               text: `${(data.pct_inactive * 100).toFixed(
                 0
-              )}% of you're users haven't run a single query in last little bit`,
+              )}% of your users haven't run a single query in last little bit`,
             },
             { text: "and by last little bit, I mean 90 days. 90 DAYS?!" },
             {
